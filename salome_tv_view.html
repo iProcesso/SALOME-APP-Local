@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SALOME — Painel TV</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f172a;--bg2:#1e293b;--bg3:#273449;--card:#1e293b;--brd:#334155;
+  --acc:#38bdf8;--grn:#34d399;--yel:#fbbf24;--red:#f87171;--pur:#a78bfa;--pink:#f472b6;--org:#fb923c;
+  --tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;
+  --f:'DM Sans',sans-serif;--m:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--f);background:radial-gradient(1200px 600px at 80% -10%,rgba(56,189,248,.08),transparent 60%),var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ===== Layout ===== */
+.wrap{max-width:1920px;margin:0 auto;padding:clamp(16px,1.6vw,28px) clamp(20px,2vw,40px)}
+
+/* ===== Top bar ===== */
+.top{display:flex;align-items:center;gap:18px;margin-bottom:clamp(14px,1.4vw,22px)}
+.logo{width:clamp(46px,3.4vw,60px);height:clamp(46px,3.4vw,60px);border-radius:14px;background:linear-gradient(135deg,var(--acc),#6366f1);display:flex;align-items:center;justify-content:center;font-family:var(--m);font-weight:600;font-size:clamp(20px,1.6vw,28px);color:#0f172a;flex-shrink:0;box-shadow:0 10px 30px rgba(56,189,248,.25)}
+.ttl{line-height:1.05}
+.ttl h1{font-size:clamp(22px,2vw,36px);font-weight:800;letter-spacing:-.5px}
+.ttl .sub{font-size:clamp(11px,.85vw,15px);color:var(--tx2);font-weight:500;letter-spacing:.5px;text-transform:uppercase;margin-top:3px}
+.clock{margin-left:auto;text-align:right}
+.clock .hora{font-family:var(--m);font-size:clamp(28px,2.6vw,52px);font-weight:500;letter-spacing:2px;line-height:1}
+.clock .data{font-size:clamp(12px,.95vw,17px);color:var(--tx2);font-weight:500;margin-top:4px;text-transform:capitalize}
+.live{display:inline-flex;align-items:center;gap:7px;margin-top:8px;font-size:clamp(10px,.78vw,13px);color:var(--grn);font-weight:600;letter-spacing:.5px}
+.live .dot{width:9px;height:9px;border-radius:50%;background:var(--grn);box-shadow:0 0 0 0 rgba(52,211,153,.6);animation:pulse 1.8s infinite}
+.live.stale{color:var(--yel)}.live.stale .dot{background:var(--yel);animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 12px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+
+/* ===== KPI strip ===== */
+.kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:clamp(10px,.9vw,16px);margin-bottom:clamp(14px,1.4vw,22px)}
+.kpi{background:var(--card);border:1px solid var(--brd);border-radius:16px;padding:clamp(12px,1vw,20px);position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc);opacity:.9}
+.kpi.k-grn::after{background:var(--grn)}.kpi.k-yel::after{background:var(--yel)}.kpi.k-pur::after{background:var(--pur)}.kpi.k-pink::after{background:var(--pink)}.kpi.k-org::after{background:var(--org)}.kpi.k-tx::after{background:var(--tx3)}
+.kpi .lbl{font-size:clamp(9px,.72vw,12px);color:var(--tx3);font-weight:600;letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .val{font-family:var(--m);font-size:clamp(26px,2.4vw,46px);font-weight:500;letter-spacing:-1px;line-height:1}
+.kpi .vsub{font-size:clamp(10px,.74vw,13px);color:var(--tx3);margin-top:6px}
+
+/* ===== Main grid ===== */
+.grid{display:grid;grid-template-columns:1.1fr 1.4fr 1fr;gap:clamp(12px,1.1vw,20px);align-items:start}
+.panel{background:var(--card);border:1px solid var(--brd);border-radius:18px;padding:clamp(14px,1.1vw,22px);min-height:120px}
+.panel-h{display:flex;align-items:center;gap:9px;margin-bottom:clamp(10px,.9vw,16px)}
+.panel-h .ic{font-size:clamp(15px,1.1vw,20px)}
+.panel-h .t{font-size:clamp(13px,1vw,18px);font-weight:700}
+.panel-h .badge{margin-left:auto;font-family:var(--m);font-size:clamp(11px,.82vw,15px);color:var(--tx2);background:var(--bg3);padding:3px 10px;border-radius:8px}
+
+/* ===== Ativos agora ===== */
+.ativo-row{display:flex;align-items:center;gap:12px;padding:clamp(9px,.75vw,13px) 0;border-bottom:1px solid rgba(51,65,85,.6)}
+.ativo-row:last-child{border-bottom:none}
+.av{width:clamp(36px,2.6vw,46px);height:clamp(36px,2.6vw,46px);border-radius:11px;background:linear-gradient(135deg,var(--acc),var(--pur));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:clamp(14px,1.1vw,20px);color:#0f172a;flex-shrink:0}
+.ativo-info{flex:1;min-width:0}
+.ativo-nome{font-size:clamp(14px,1.05vw,19px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ativo-at{font-size:clamp(11px,.85vw,15px);color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.ativo-desde{font-family:var(--m);font-size:clamp(10px,.78vw,14px);color:var(--grn);flex-shrink:0;display:flex;align-items:center;gap:5px}
+.ativo-desde .pd{width:7px;height:7px;border-radius:50%;background:var(--grn);animation:pulse 1.8s infinite}
+
+/* ===== Ranking pessoas ===== */
+.rk-row{display:flex;align-items:center;gap:12px;padding:clamp(8px,.7vw,12px) 0;border-bottom:1px solid rgba(51,65,85,.6)}
+.rk-row:last-child{border-bottom:none}
+.rk-pos{width:clamp(26px,1.9vw,34px);height:clamp(26px,1.9vw,34px);border-radius:9px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:var(--m);font-weight:600;font-size:clamp(12px,.9vw,16px);color:var(--tx2);flex-shrink:0}
+.rk-row.top1 .rk-pos{background:rgba(251,191,36,.18);color:var(--yel)}
+.rk-row.top2 .rk-pos{background:rgba(148,163,184,.18);color:#cbd5e1}
+.rk-row.top3 .rk-pos{background:rgba(251,146,60,.16);color:var(--org)}
+.rk-info{flex:1;min-width:0}
+.rk-nome{font-size:clamp(13px,1vw,18px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk-bar-wrap{height:6px;border-radius:4px;background:var(--bg3);margin-top:5px;overflow:hidden}
+.rk-bar{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--grn),#10b981);transition:width .8s ease}
+.rk-val{font-family:var(--m);font-size:clamp(12px,.95vw,17px);font-weight:500;color:var(--grn);flex-shrink:0;text-align:right;min-width:64px}
+.rk-val small{display:block;font-size:clamp(9px,.66vw,11px);color:var(--tx3);font-weight:400}
+
+/* ===== Produção (colunometria) ===== */
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(10px,.9vw,16px);margin-bottom:clamp(12px,1vw,18px)}
+.prod-card{background:var(--bg3);border-radius:14px;padding:clamp(12px,1vw,18px);text-align:center;position:relative;overflow:hidden}
+.prod-card .pic{font-size:clamp(18px,1.4vw,26px);margin-bottom:6px}
+.prod-card .pval{font-family:var(--m);font-size:clamp(24px,2.2vw,42px);font-weight:500;line-height:1;letter-spacing:-1px}
+.prod-card .plbl{font-size:clamp(10px,.76vw,13px);color:var(--tx3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-top:6px}
+.prod-card.vol .pval{color:var(--acc)}.prod-card.pal .pval{color:var(--org)}.prod-card.cte .pval{color:var(--pur)}
+
+/* ===== Atividades (barras) ===== */
+.atv-row{display:flex;align-items:center;gap:10px;padding:clamp(6px,.55vw,10px) 0}
+.atv-dot{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+.atv-info{flex:1;min-width:0}
+.atv-nome{font-size:clamp(12px,.92vw,16px);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atv-bar-wrap{height:7px;border-radius:4px;background:var(--bg3);margin-top:4px;overflow:hidden}
+.atv-bar{height:100%;border-radius:4px;transition:width .8s ease}
+.atv-min{font-family:var(--m);font-size:clamp(11px,.85vw,15px);color:var(--tx2);flex-shrink:0;min-width:54px;text-align:right}
+
+/* ===== util ===== */
+.empty{text-align:center;padding:clamp(20px,2vw,40px);color:var(--tx3);font-size:clamp(12px,.9vw,16px)}
+.empty .ico{font-size:clamp(28px,2.4vw,42px);opacity:.4;margin-bottom:8px}
+.spin{width:38px;height:38px;border:3px solid var(--bg3);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;min-height:60vh;color:var(--tx2)}
+
+.fade{animation:fade .5s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* progress bar de refresh no topo */
+#refbar{position:fixed;left:0;top:0;height:3px;background:var(--acc);width:0%;z-index:100;box-shadow:0 0 8px rgba(56,189,248,.6);transition:width .2s linear}
+
+/* responsividade: telas menores empilham */
+@media(max-width:1400px){.kpis{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.clock{display:none}}
+</style>
+</head>
+<body>
+
+<div id="refbar"></div>
+
+<div class="wrap">
+
+  <!-- TOP -->
+  <div class="top">
+    <div class="logo">S</div>
+    <div class="ttl">
+      <h1>SALOME · Painel de Operação</h1>
+      <div class="sub">Acompanhamento ao vivo</div>
+    </div>
+    <div class="clock">
+      <div class="hora" id="clk-hora">--:--:--</div>
+      <div class="data" id="clk-data">—</div>
+      <div class="live" id="live"><span class="dot"></span><span id="live-txt">conectando…</span></div>
+    </div>
+  </div>
+
+  <!-- conteúdo (preenchido via JS) -->
+  <div id="root">
+    <div class="loading"><div class="spin"></div><div>Carregando painel…</div></div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SALOME — Painel TV (standalone / GitHub Pages)
+// Consome wsGetPainelTV via mesmo padrão do dashboard (POST {fn,arg})
+// Auto-refresh: 60s · Display público (sem token)
+// ═══════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1DcHIKPHt5WPwMQP1-UuPea-trKwiYNf8xwIm50-7WyiXSJmVRyTxUStbHIJoLpUlfw/exec";
+const REFRESH_MS = 60000;
+
+const CORES_GRUPOS = {
+  "Embarcador":"#38bdf8","Transporte":"#818cf8","Descarga e recebimento":"#34d399",
+  "Armazém":"#fbbf24","Palete":"#f472b6","Carga e embarque":"#fb923c",
+  "Administrativo":"#94a3b8","Suporte":"#a78bfa","Sistema":"#475569"
+};
+function corGrupo(g){ return CORES_GRUPOS[g] || "#38bdf8"; }
+
+// ── chamada ao backend (igual ao dashboard) ──
+function api(fn, arg){
+  if(typeof google!=="undefined" && google.script && google.script.run){
+    return new Promise((ok,err)=>{
+      const run=google.script.run
+        .withSuccessHandler(r=>{ if(r&&r.__erro) err(new Error(r.__erro)); else ok(r); })
+        .withFailureHandler(e=>err(new Error(e.message||String(e))));
+      arg!==undefined ? run[fn](arg) : run[fn]();
+    });
+  }
+  return fetch(APPS_SCRIPT_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain"},
+    body:JSON.stringify({fn, arg: arg!==undefined ? arg : null}),
+  }).then(r=>r.json()).then(r=>{ if(r&&r.__erro) throw new Error(r.__erro); return r; });
+}
+
+// ── helpers ──
+function fmtMin(min){
+  min = Math.max(0, Math.round(min||0));
+  const h=Math.floor(min/60), m=min%60;
+  return h>0 ? (h+"h"+(m>0?String(m).padStart(2,"0"):"")) : (m+"m");
+}
+function fmtNum(n){ return (Math.round((n||0)*100)/100).toLocaleString("pt-BR"); }
+function iniciais(nome){ const p=(nome||"?").trim().split(/\s+/); return ((p[0]||"?")[0]+(p[1]?p[1][0]:"")).toUpperCase(); }
+function esc(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+// ── relógio ──
+function tickRelogio(){
+  const agora=new Date();
+  document.getElementById("clk-hora").textContent = agora.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  document.getElementById("clk-data").textContent = agora.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+}
+setInterval(tickRelogio,1000); tickRelogio();
+
+// ── render principal ──
+function render(d){
+  const k = d.kpi || {};
+  const atividades = d.atividades || [];
+  const pessoas    = d.pessoas    || [];
+  const ativos     = d.ativos     || [];
+
+  const maxAtv = Math.max(1, ...atividades.map(a=>a.minutos||0));
+  const maxRk  = Math.max(1, ...pessoas.map(p=>p.minProd||0));
+
+  let html = "";
+
+  // ── KPIs ──
+  html += '<div class="kpis fade">';
+  html += kpi("k-grn","Pessoas ativas agora", k.pessoasAtivas||0, (k.pessoasDia||0)+" no dia");
+  html += kpi("","Apontamentos",            k.apontamentos||0, (k.atividadesDistintas||0)+" atividades");
+  html += kpi("k-grn","Tempo produtivo",     fmtMin(k.minProdutivos), (k.pctProdutivo||0)+"% do total");
+  html += kpi("k-tx","Tempo inativo",        fmtMin(k.minInativos), "paradas / pausas");
+  html += kpi("k-acc","% Produtividade",     (k.pctProdutivo||0)+"%", "do tempo total");
+  html += kpi("k-org","Paletes",             fmtNum(k.palet), "movimentados");
+  html += kpi("k-pur","CTes",                fmtNum(k.cte), "emitidos");
+  html += '</div>';
+
+  // ── grid principal ──
+  html += '<div class="grid">';
+
+  // Coluna 1 — Ativos agora
+  html += '<div class="panel fade">';
+  html += panelH("⚡","Ativos agora", ativos.length+"");
+  if(ativos.length){
+    html += ativos.map(a=>(
+      '<div class="ativo-row">'
+      + '<div class="av">'+esc(iniciais(a.nome))+'</div>'
+      + '<div class="ativo-info"><div class="ativo-nome">'+esc(a.nome)+'</div>'
+      + '<div class="ativo-at">'+esc(a.atividade||"—")+'</div></div>'
+      + '<div class="ativo-desde"><span class="pd"></span>'+esc(a.desde||"--:--")+'</div>'
+      + '</div>'
+    )).join("");
+  } else {
+    html += '<div class="empty"><div class="ico">😴</div>Ninguém em atividade no momento</div>';
+  }
+  html += '</div>';
+
+  // Coluna 2 — Produção + Atividades
+  html += '<div class="panel fade">';
+  html += panelH("📦","Produção do dia","");
+  html += '<div class="prod-grid">';
+  html += '<div class="prod-card vol"><div class="pic">📦</div><div class="pval">'+fmtNum(k.volume)+'</div><div class="plbl">Volume</div></div>';
+  html += '<div class="prod-card pal"><div class="pic">🪵</div><div class="pval">'+fmtNum(k.palet)+'</div><div class="plbl">Paletes</div></div>';
+  html += '<div class="prod-card cte"><div class="pic">📄</div><div class="pval">'+fmtNum(k.cte)+'</div><div class="plbl">CTes</div></div>';
+  html += '</div>';
+  html += panelH("📊","Tempo por atividade","");
+  if(atividades.length){
+    html += atividades.slice(0,8).map(a=>{
+      const cor=corGrupo(a.grupo);
+      const w=Math.round((a.minutos||0)/maxAtv*100);
+      return '<div class="atv-row">'
+        + '<span class="atv-dot" style="background:'+cor+'"></span>'
+        + '<div class="atv-info"><div class="atv-nome">'+esc(a.desc||a.codigo)+'</div>'
+        + '<div class="atv-bar-wrap"><div class="atv-bar" style="width:'+w+'%;background:'+cor+'"></div></div></div>'
+        + '<div class="atv-min">'+fmtMin(a.minutos)+'</div>'
+        + '</div>';
+    }).join("");
+  } else {
+    html += '<div class="empty"><div class="ico">📊</div>Sem atividades produtivas hoje</div>';
+  }
+  html += '</div>';
+
+  // Coluna 3 — Ranking pessoas
+  html += '<div class="panel fade">';
+  html += panelH("🏆","Ranking — tempo produtivo", pessoas.length+"");
+  if(pessoas.length){
+    html += pessoas.slice(0,10).map((p,i)=>{
+      const w=Math.round((p.minProd||0)/maxRk*100);
+      const cls=i===0?"top1":i===1?"top2":i===2?"top3":"";
+      return '<div class="rk-row '+cls+'">'
+        + '<div class="rk-pos">'+(i+1)+'</div>'
+        + '<div class="rk-info"><div class="rk-nome">'+esc(p.nome)+(p.aberto?' <span style="color:var(--grn);font-size:.8em">●</span>':'')+'</div>'
+        + '<div class="rk-bar-wrap"><div class="rk-bar" style="width:'+w+'%"></div></div></div>'
+        + '<div class="rk-val">'+fmtMin(p.minProd)+'<small>'+(p.qtd||0)+' apont.</small></div>'
+        + '</div>';
+    }).join("");
+  } else {
+    html += '<div class="empty"><div class="ico">👤</div>Nenhuma pessoa hoje</div>';
+  }
+  html += '</div>';
+
+  html += '</div>'; // grid
+
+  document.getElementById("root").innerHTML = html;
+}
+
+function kpi(cls,lbl,val,sub){
+  return '<div class="kpi '+(cls||"")+'"><div class="lbl">'+esc(lbl)+'</div>'
+    + '<div class="val">'+esc(val)+'</div>'
+    + '<div class="vsub">'+esc(sub||"")+'</div></div>';
+}
+function panelH(ic,t,badge){
+  return '<div class="panel-h"><span class="ic">'+ic+'</span><span class="t">'+esc(t)+'</span>'
+    + (badge!=="" ? '<span class="badge">'+esc(badge)+'</span>' : '') + '</div>';
+}
+
+// ── status "ao vivo" ──
+function setLive(ok,horaGerado){
+  const el=document.getElementById("live"), txt=document.getElementById("live-txt");
+  if(ok){ el.classList.remove("stale"); txt.textContent = "ao vivo · "+(horaGerado||""); }
+  else  { el.classList.add("stale");    txt.textContent = "sem conexão · tentando…"; }
+}
+
+// ── ciclo de carregamento ──
+let carregando=false;
+async function carregar(){
+  if(carregando) return;
+  carregando=true;
+  try{
+    const d = await api("wsGetPainelTV", { data: "" });
+    if(d && d.ok){
+      render(d);
+      setLive(true, d.gerado_em);
+    } else {
+      setLive(false);
+      if(!document.querySelector("#root .panel")) mostrarErro(d && d.__erro);
+    }
+  }catch(e){
+    setLive(false);
+    if(!document.querySelector("#root .panel")) mostrarErro(e.message);
+  }finally{
+    carregando=false;
+  }
+}
+
+function mostrarErro(msg){
+  document.getElementById("root").innerHTML =
+    '<div class="loading"><div style="font-size:42px">📡</div>'
+    + '<div style="font-size:18px;font-weight:600">Não foi possível carregar o painel</div>'
+    + '<div style="font-size:13px;color:var(--tx3);max-width:420px;text-align:center">'+esc(msg||"Verifique a conexão com o servidor. Nova tentativa automática em instantes.")+'</div></div>';
+}
+
+// ── barra de progresso até o próximo refresh ──
+let refStart=Date.now();
+function tickRefBar(){
+  const pct = Math.min(100, (Date.now()-refStart)/REFRESH_MS*100);
+  document.getElementById("refbar").style.width = pct+"%";
+}
+setInterval(tickRefBar,200);
+
+function ciclo(){
+  refStart=Date.now();
+  document.getElementById("refbar").style.width="0%";
+  carregar();
+}
+
+// inicia
+ciclo();
+setInterval(ciclo, REFRESH_MS);
+
+// permite refresh manual (tecla R ou clique no relógio)
+document.getElementById("clk-hora").parentElement.style.cursor="pointer";
+document.getElementById("clk-hora").parentElement.addEventListener("click",ciclo);
+document.addEventListener("keydown",e=>{ if(e.key==="r"||e.key==="R") ciclo(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+# salome-app
+Salome
