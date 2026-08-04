@@ -572,6 +572,10 @@ const S = {
   dragIdx:      null,
   statusDia:    null,
   gruposAbertos:{},
+  // Sync em 2º plano (outbox durável) — não perde dado
+  outbox:        [],
+  _flushing:     false,
+  _refreshing:   false,
   // Cache de leitura
   cacheAtivs:    null,   // {data: timestamp, items: [...]}
   cachePerfil:   null,   // {data: timestamp, user: {...}}
@@ -582,6 +586,89 @@ const S = {
   _confResolve: null,
   _pendResolve: null,
 };
+
+// ═══════════════════════════════════════════════
+// SYNC EM 2º PLANO (outbox durável) + INDICADOR
+// Gravações não travam a tela e são reenviadas até confirmar.
+// ═══════════════════════════════════════════════
+const OUTBOX_KEY = "salome_outbox_v1";
+
+function loadOutbox(){ try{ S.outbox = JSON.parse(localStorage.getItem(OUTBOX_KEY)||"[]")||[]; }catch(_){ S.outbox=[]; } }
+function saveOutbox(){ try{ localStorage.setItem(OUTBOX_KEY, JSON.stringify(S.outbox)); }catch(_){} }
+
+// Enfileira uma gravação: a UI segue na hora; o envio ocorre em 2º plano
+// com reenvio automático até o servidor confirmar.
+function enqueueSync(fn, arg, label){
+  S.outbox.push({ uid:"w"+Date.now()+Math.random().toString(36).slice(2,7), fn, arg, label:label||fn, tent:0 });
+  saveOutbox(); renderPend(); flushOutbox();
+}
+
+let _flushTimer=null;
+async function flushOutbox(){
+  if(S._flushing) return;
+  if(!S.outbox.length){ renderPend(); return; }
+  S._flushing=true; let enviou=false;
+  try{
+    while(S.outbox.length){
+      const item=S.outbox[0];
+      try{
+        // usa sempre o token atual (evita falha se a fila for enviada após novo login)
+        if(item.arg && typeof item.arg==="object" && "token" in item.arg){ item.arg.token=getToken(); }
+        const res=await gsr(item.fn, item.arg);
+        if(res && res.__erro) throw new Error(res.__erro);
+        S.outbox.shift(); saveOutbox(); renderPend(); enviou=true;   // sucesso
+      }catch(e){
+        item.tent=(item.tent||0)+1; saveOutbox(); renderPend();
+        break;   // falhou: mantém na fila e reagenda
+      }
+    }
+  } finally {
+    S._flushing=false;
+    if(S.outbox.length){ clearTimeout(_flushTimer); _flushTimer=setTimeout(flushOutbox, 5000); }
+    else if(enviou){ bgRefresh(); }   // fila vazia: reconcilia dados reais (ids etc.)
+  }
+}
+
+function ensurePendEl(){
+  if(document.getElementById("sync-pend")) return;
+  const d=document.createElement("div");
+  d.id="sync-pend";
+  d.style.cssText="position:fixed;bottom:74px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--yel);color:var(--yel);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;z-index:60;display:none;align-items:center;gap:6px;box-shadow:0 6px 18px rgba(0,0,0,.45)";
+  document.body.appendChild(d);
+}
+function renderPend(){
+  ensurePendEl();
+  const el=document.getElementById("sync-pend"); if(!el) return;
+  const n=S.outbox.length;
+  if(n>0){ el.style.display="flex"; el.textContent="⟳ sincronizando "+n; }
+  else   { el.style.display="none"; }
+}
+
+// Atualiza apontamentos + status do dia em 2º plano e re-renderiza a tela atual.
+async function bgRefresh(){
+  if(S._refreshing) return;
+  S._refreshing=true;
+  try{
+    const [aponts,statusDia]=await Promise.all([
+      gsr("wsGetMeusApontamentos",{token:getToken(),data:""}),
+      gsr("wsGetStatusDia",getToken()).catch(()=>S.statusDia),
+    ]);
+    if(Array.isArray(aponts)){
+      S.aponts=aponts; S.seqIt=aponts;
+      S.atual=aponts.find(a=>!a.hora_fim||a.hora_fim==="")||null;
+    }
+    if(statusDia) S.statusDia=statusDia;
+    if(S.telaAtual==="home"){ rAtual(); rCont(); rBtnFecharDia(); }
+    else if(S.telaAtual==="seq"){ rBtnDiaSeq(); rSeq(); }
+  }catch(_){}
+  finally{ S._refreshing=false; }
+}
+
+// Inicialização do sync (ao carregar o script)
+loadOutbox();
+try{ ensurePendEl(); }catch(_){}
+window.addEventListener("online", flushOutbox);
+setInterval(function(){ if(S.token) flushOutbox(); }, 15000);
 
 // ═══════════════════════════════════════════════
 // TOKEN (memória apenas — sem localStorage no iframe)
@@ -699,10 +786,11 @@ async function continueInit() {
     }
 
     S.filt = [...S.ativs];
-    await carregarHome();
+    await preloadDados();      // aponts + status do dia (em paralelo) → navegação instantânea depois
     rHeaderUser();
     go("home");
     S.telaAtual = "home";
+    flushOutbox();             // reenvia gravações pendentes de uma sessão anterior
   } catch(e) {
     clearToken();
     go("login");
@@ -729,17 +817,47 @@ function rHeaderUser() {
 // ═══════════════════════════════════════════════
 // HOME
 // ═══════════════════════════════════════════════
-async function carregarHome() {
+// Pinta a Home imediatamente a partir da memória (sem esperar o servidor).
+function renderHomeSync() {
   const hoje = new Date();
-  document.getElementById("h-data").textContent =
-    hoje.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
-  document.getElementById("h-data-sub").textContent =
-    hoje.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"});
+  const hd=document.getElementById("h-data");
+  if(hd) hd.textContent = hoje.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+  const hs=document.getElementById("h-data-sub");
+  if(hs) hs.textContent = hoje.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"});
+  rAtual(); rCont(); rLista(); rBtnFecharDia();
+}
+
+// Busca os apontamentos do dia e re-renderiza (usado em 2º plano).
+async function refreshHome() {
   try {
-    S.aponts = await gsr("wsGetMeusApontamentos",{token:getToken(),data:""});
-    S.atual  = S.aponts.find(a=>!a.hora_fim||a.hora_fim==="") || null;
-    rAtual(); rCont(); rLista(); rBtnFecharDia();
+    const aponts = await gsr("wsGetMeusApontamentos",{token:getToken(),data:""});
+    if(Array.isArray(aponts)){
+      S.aponts = aponts; S.seqIt = aponts;
+      S.atual  = aponts.find(a=>!a.hora_fim||a.hora_fim==="") || null;
+    }
   } catch(_) {}
+  renderHomeSync();
+}
+
+// Mantida como async (há chamadores com await): pinta na hora e atualiza em 2º plano.
+async function carregarHome() {
+  renderHomeSync();
+  return refreshHome();
+}
+
+// Pré-carrega os dados do dia logo após o login → navegação instantânea depois.
+async function preloadDados() {
+  try {
+    const [aponts,statusDia] = await Promise.all([
+      gsr("wsGetMeusApontamentos",{token:getToken(),data:""}),
+      gsr("wsGetStatusDia",getToken()).catch(()=>null),
+    ]);
+    S.aponts = Array.isArray(aponts)?aponts:[];
+    S.seqIt  = S.aponts;
+    S.atual  = S.aponts.find(a=>!a.hora_fim||a.hora_fim==="") || null;
+    if(statusDia) S.statusDia = statusDia;
+  } catch(_) {}
+  renderHomeSync();
 }
 
 function atualizarHome() {
@@ -904,62 +1022,47 @@ async function abrirAp(codigo, descricao, setor, area) {
   document.getElementById("ap-banner").innerHTML='';
   document.getElementById("ap-pos").style.display="none";
   pararCrono();
-  setBtns([{cls:"apb lod",txt:"⏳ Consultando...",dis:true}],"um");
   go("ap"); S.telaAtual="ap";
 
-  try {
-    const sit = await gsr("wsGetSituacaoAtual", getToken());
+  // ── DECISÃO INSTANTÂNEA a partir da memória (sem esperar o servidor) ──
+  const ab = (S.atual && (!S.atual.hora_fim||S.atual.hora_fim==="")) ? S.atual : null;
 
-    // ── PONTO 2: pendência de dia anterior com horário customizado ──
-    if (sit.pendente) {
+  if (ab && ab.atividade_codigo===codigo) {
+    S.apId=ab.id_apontamento; S.estado="andamento";
+    document.getElementById("ap-hora").textContent=ab.hora_inicio||"--:--";
+    document.getElementById("ap-hora").className="ap-hora run";
+    document.getElementById("ap-lbl").textContent="Em andamento desde";
+    rBanner("andamento",ab);
+    setBtns([
+      {id:"btn-and",cls:"apb and",txt:"● Em andamento",dis:true},
+      {id:"btn-sus",cls:"apb sus",txt:"⏸ Suspenso",dis:false,fn:"clicarSuspenso()"},
+    ],"dois");
+    document.getElementById("ap-pos").style.display="block";
+    iniciarCrono(ab.hora_inicio);
+    rObs();
+    gsr("wsGetObservacoes",{id:ab.id_apontamento,token:getToken()}).then(obs=>{S.obsLoc=obs||[];rObs();}).catch(()=>{});
+  } else {
+    S.estado="pre";
+    const agora=new Date().toTimeString().slice(0,5);
+    document.getElementById("ap-hora").textContent=agora;
+    document.getElementById("ap-hora").className="ap-hora";
+    document.getElementById("ap-lbl").textContent="Hora de início";
+    rBanner("pre",ab);
+    setBtns([{id:"btn-ini",cls:"apb ini",txt:"▶ Iniciar",dis:false,fn:"clicarIniciar()"}],"um");
+  }
+
+  // ── CONFIRMAÇÃO EM 2º PLANO: pendência de dia anterior (não trava a tela) ──
+  gsr("wsGetSituacaoAtual", getToken()).then(async sit=>{
+    if (sit && sit.pendente) {
       const p = sit.pendente;
       const resp = await mostrarPendencia(p);
-      if (!resp.ok) { go("home"); S.telaAtual="home"; return; }
-
+      if (!resp.ok) { go("home"); S.telaAtual="home"; renderHomeSync(); return; }
       toast("Encerrando pendência...","wa");
-      await gsr("wsFecharPendenciaComHora",{
-        token: getToken(),
-        id:    p.id_apontamento,
-        data:  p.data_inicio,
-        hora:  resp.hora,
-      });
-      toast("Pendência encerrada ✓","ok");
+      enqueueSync("wsFecharPendenciaComHora",{
+        token: getToken(), id: p.id_apontamento, data: p.data_inicio, hora: resp.hora,
+      },"Encerrar pendência");
     }
-
-    const ab = sit.aberto;
-    S.atual = ab;
-
-    if (ab && ab.atividade_codigo===codigo) {
-      S.apId=ab.id_apontamento; S.estado="andamento";
-      document.getElementById("ap-hora").textContent=ab.hora_inicio||"--:--";
-      document.getElementById("ap-hora").className="ap-hora run";
-      document.getElementById("ap-lbl").textContent="Em andamento desde";
-      rBanner("andamento",ab);
-      setBtns([
-        {id:"btn-and",cls:"apb and",txt:"● Em andamento",dis:true},
-        {id:"btn-sus",cls:"apb sus",txt:"⏸ Suspenso",dis:false,fn:"clicarSuspenso()"},
-      ],"dois");
-      document.getElementById("ap-pos").style.display="block";
-      iniciarCrono(ab.hora_inicio);
-      rObs();
-      gsr("wsGetObservacoes",{id:ab.id_apontamento,token:getToken()}).then(obs=>{S.obsLoc=obs||[];rObs();}).catch(()=>{});
-    } else {
-      S.estado="pre";
-      const agora=new Date().toTimeString().slice(0,5);
-      document.getElementById("ap-hora").textContent=agora;
-      document.getElementById("ap-hora").className="ap-hora";
-      document.getElementById("ap-lbl").textContent="Hora de início";
-      rBanner("pre",ab);
-      setBtns([{id:"btn-ini",cls:"apb ini",txt:"▶ Iniciar",dis:false,fn:"clicarIniciar()"}],"um");
-    }
-  } catch(e) {
-    toast("Erro ao consultar: "+e.message,"er");
-    setBtns([{id:"btn-ini",cls:"apb ini",txt:"▶ Iniciar",dis:false,fn:"clicarIniciar()"}],"um");
-    document.getElementById("ap-lbl").textContent="Hora de início";
-    document.getElementById("ap-hora").textContent=new Date().toTimeString().slice(0,5);
-    document.getElementById("ap-hora").className="ap-hora";
-    rBanner("pre",S.atual);
-  }
+  }).catch(()=>{});
 }
 
 function rBanner(modo,ab) {
@@ -1145,9 +1248,10 @@ function envObs() {
   if(!txt)return;
   const hora=new Date().toTimeString().slice(0,5);
   const idAp=S.apId||(S.atual&&S.atual.id_apontamento);
-  gsr("wsGravarObservacao",{id_apontamento:idAp,texto:txt,hora,token:getToken()}).catch(()=>toast("Erro ao salvar obs","er"));
+  // libera o campo na hora; grava em 2º plano com reenvio automático
   S.obsLoc.push({hora,texto:txt});
   ta.value="";ta.style.height="auto";rObs();
+  enqueueSync("wsGravarObservacao",{id_apontamento:idAp,texto:txt,hora,token:getToken()},"Observação");
 }
 
 // ═══════════════════════════════════════════════
@@ -1157,18 +1261,20 @@ async function irNavSeq() {
   go("seq"); S.telaAtual="seq";
   const hoje=new Date();
   document.getElementById("seq-dt").textContent=hoje.toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"});
-  document.getElementById("seq-list").innerHTML=`<div class="empty"><div class="spin" style="margin:0 auto"></div></div>`;
-  const btnDia=document.getElementById("btn-dia-seq");
-  btnDia.style.display="none";
+  // pinta imediatamente do cache (sem spinner)
+  if(!S.seqIt||!S.seqIt.length) S.seqIt = S.aponts || [];
+  rBtnDiaSeq(); rSeq();
+  // atualiza em 2º plano
   try {
     const [aponts,statusDia]=await Promise.all([
       gsr("wsGetMeusApontamentos",{token:getToken(),data:""}),
       gsr("wsGetStatusDia",getToken()),
     ]);
-    S.seqIt=aponts; S.statusDia=statusDia;
+    if(Array.isArray(aponts)){ S.seqIt=aponts; S.aponts=aponts; S.atual=aponts.find(a=>!a.hora_fim||a.hora_fim==="")||S.atual; }
+    if(statusDia) S.statusDia=statusDia;
     rBtnDiaSeq(); rSeq();
   } catch(e) {
-    document.getElementById("seq-list").innerHTML=`<div class="empty"><div class="et">Erro ao carregar</div></div>`;
+    // mantém o que já está pintado do cache
   }
 }
 
@@ -1261,15 +1367,21 @@ async function savSeq(){
   const{i,it}=S.seqEd;
   const ini=document.getElementById("e-ini").value,fim=document.getElementById("e-fim").value;
   if(!ini){toast("Informe a hora de início","er");return;}
-  try{await gsr("wsAtualizarHorasApontamento",{id:it.id_apontamento,hora_inicio:ini,hora_fim:fim,token:getToken()});S.seqIt[i]={...it,hora_inicio:ini,hora_fim:fim};fm("m-ed");rSeq();toast("Salvo!","ok");}
-  catch(e){toast("Erro: "+e.message,"er");}
+  // otimista: fecha o modal e atualiza a lista na hora; grava em 2º plano
+  S.seqIt[i]={...it,hora_inicio:ini,hora_fim:fim};
+  fm("m-ed"); rSeq();
+  enqueueSync("wsAtualizarHorasApontamento",{id:it.id_apontamento,hora_inicio:ini,hora_fim:fim,token:getToken()},"Editar horário");
+  toast("Salvo ✓","ok");
 }
 async function delSeq(){
   const{i,it}=S.seqEd;
   const ok=await confirmar("🗑","Excluir apontamento?","Esta ação não pode ser desfeita.","Excluir","bdl");
   if(!ok)return;
-  try{await gsr("wsExcluirApontamento",{id:it.id_apontamento,token:getToken()});S.seqIt.splice(i,1);fm("m-ed");rSeq();toast("Excluído","ok");}
-  catch(e){toast("Erro: "+e.message,"er");}
+  // otimista: remove da lista e fecha o modal na hora; exclui em 2º plano
+  S.seqIt.splice(i,1);
+  fm("m-ed"); rSeq();
+  enqueueSync("wsExcluirApontamento",{id:it.id_apontamento,token:getToken()},"Excluir apontamento");
+  toast("Excluído ✓","ok");
 }
 function amSeq(){
   const sel=document.getElementById("inc-at");
@@ -1290,10 +1402,13 @@ async function okIncluir(){
   const sel=document.getElementById("inc-at");
   const ini=document.getElementById("inc-ini").value,fim=document.getElementById("inc-fim").value;
   if(!ini){toast("Informe a hora de início","er");return;}
-  try{
-    await gsr("wsIncluirApontamento",{token:getToken(),codigo:sel.value,descricao:sel.options[sel.selectedIndex].dataset.desc,hora_inicio:ini,hora_fim:fim});
-    fm("m-inc");await irNavSeq();toast("Incluído!","ok");
-  }catch(e){toast("Erro: "+e.message,"er");}
+  const desc=sel.options[sel.selectedIndex].dataset.desc;
+  // otimista: adiciona à lista e fecha o modal na hora; grava em 2º plano
+  S.seqIt.push({id_apontamento:"", atividade_codigo:sel.value, atividade_desc:desc, hora_inicio:ini, hora_fim:fim});
+  S.seqIt.sort((a,b)=>((a.hora_inicio||"")>(b.hora_inicio||"")?1:-1));
+  fm("m-inc"); rSeq();
+  enqueueSync("wsIncluirApontamento",{token:getToken(),codigo:sel.value,descricao:desc,hora_inicio:ini,hora_fim:fim},"Incluir apontamento");
+  toast("Incluído ✓","ok");
 }
 
 // ═══════════════════════════════════════════════
