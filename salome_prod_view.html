@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SALOME — Produtividade</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f172a;--bg2:#1e293b;--bg3:#273449;--card:#1e293b;--brd:#334155;
+  --acc:#ef4444;--grn:#34d399;--yel:#fbbf24;--red:#f87171;--pur:#a78bfa;
+  --tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;
+  --f:'DM Sans',sans-serif;--m:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--f);background:radial-gradient(1200px 600px at 80% -10%,rgba(239,68,68,.08),transparent 60%),var(--bg);color:var(--tx);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+#refbar{position:fixed;left:0;top:0;height:3px;background:var(--acc);width:0%;z-index:100;box-shadow:0 0 8px rgba(239,68,68,.6);transition:width .2s linear}
+
+/* palco em coluna, ocupa a tela toda */
+#stage{height:100vh;display:flex;flex-direction:column;padding:clamp(12px,1.4vw,26px) clamp(16px,2vw,38px);gap:clamp(10px,1.2vw,18px)}
+
+/* top */
+.top{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.logo{width:clamp(42px,3vw,56px);height:clamp(42px,3vw,56px);border-radius:14px;background:linear-gradient(135deg,var(--acc),#b91c1c);display:flex;align-items:center;justify-content:center;font-family:var(--m);font-weight:600;font-size:clamp(18px,1.5vw,26px);color:#0f172a;flex-shrink:0;box-shadow:0 10px 30px rgba(239,68,68,.25)}
+.ttl h1{font-size:clamp(18px,1.7vw,32px);font-weight:800;letter-spacing:-.5px;line-height:1}
+.ttl .sub{font-size:clamp(10px,.8vw,14px);color:var(--tx2);font-weight:500;letter-spacing:.5px;text-transform:uppercase;margin-top:4px}
+.resumo{margin-left:auto;display:flex;gap:clamp(10px,1vw,20px);align-items:center}
+.rz{text-align:center}
+.rz .n{font-family:var(--m);font-size:clamp(18px,1.7vw,32px);font-weight:600;line-height:1}
+.rz .l{font-size:clamp(9px,.72vw,12px);color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
+.clock{margin-left:clamp(8px,1vw,18px);text-align:right;padding-left:clamp(10px,1vw,18px);border-left:1px solid var(--brd)}
+.clock .hora{font-family:var(--m);font-size:clamp(20px,1.8vw,34px);font-weight:500;letter-spacing:1px;line-height:1}
+.clock .live{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:clamp(9px,.72vw,12px);color:var(--grn);font-weight:600}
+.clock .live .dot{width:8px;height:8px;border-radius:50%;background:var(--grn);animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 10px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
+
+/* área que recebe o grid escalado */
+#gridwrap{flex:1;position:relative;overflow:hidden}
+#grid{display:grid;gap:clamp(10px,.9vw,16px);align-content:start;position:absolute;top:0;left:0;will-change:transform}
+
+/* card de colaborador */
+.pc{background:var(--card);border:1px solid var(--brd);border-radius:16px;padding:clamp(12px,.9vw,18px);position:relative;overflow:hidden;display:flex;flex-direction:column}
+.pc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
+.pc.t-abaixo::before{background:var(--red)}.pc.t-meta::before{background:var(--yel)}.pc.t-acima::before{background:var(--grn)}.pc.t-sem::before{background:var(--tx3)}
+.atv.sem{opacity:.6}
+.pc-h{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.av{width:clamp(38px,2.6vw,48px);height:clamp(38px,2.6vw,48px);border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--pur));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:clamp(14px,1.1vw,19px);color:#0f172a;flex-shrink:0}
+.pc-nome{font-size:clamp(14px,1.05vw,19px);font-weight:700;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pc-fn{font-size:clamp(10px,.78vw,13px);color:var(--tx3);margin-top:2px}
+.pc-tier{margin-left:auto;text-align:center;flex-shrink:0}
+.pc-veic{font-size:clamp(24px,2.1vw,36px);line-height:1}
+.pc-pct{font-family:var(--m);font-size:clamp(12px,.9vw,16px);font-weight:600;margin-top:2px}
+.atv{padding:7px 0;border-bottom:1px solid rgba(51,65,85,.5)}
+.atv:last-child{border-bottom:none}
+.atv-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.atv-nome{font-size:clamp(11px,.85vw,14px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.atv-veic{font-size:clamp(13px,.95vw,17px);margin-left:auto;flex-shrink:0}
+.bar{height:8px;border-radius:5px;background:var(--bg3);overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:5px;transition:width .8s ease}
+.f-abaixo{background:linear-gradient(90deg,#b91c1c,var(--red))}
+.f-meta{background:linear-gradient(90deg,#d97706,var(--yel))}
+.f-acima{background:linear-gradient(90deg,#059669,var(--grn))}
+.atv-nums{display:flex;justify-content:space-between;font-family:var(--m);font-size:clamp(10px,.76vw,13px);color:var(--tx2);margin-top:4px}
+.atv-nums b{color:var(--tx)}
+
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--tx2)}
+.spin{width:38px;height:38px;border:3px solid var(--bg3);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.tag-mock{position:fixed;bottom:10px;right:12px;background:rgba(251,191,36,.15);border:1px solid var(--yel);color:var(--yel);font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px;z-index:80;display:none}
+</style>
+</head>
+<body>
+<div id="refbar"></div>
+<div id="stage">
+  <div class="top">
+    <div class="logo">S</div>
+    <div class="ttl"><h1>SALOME · Produtividade</h1><div class="sub">Meta × Realizado por colaborador — ao vivo</div></div>
+    <div class="resumo" id="resumo"></div>
+    <div class="clock">
+      <div class="hora" id="clk-hora">--:--:--</div>
+      <div class="live" id="live"><span class="dot"></span><span id="live-txt">conectando…</span></div>
+    </div>
+  </div>
+  <div id="gridwrap">
+    <div id="grid"></div>
+    <div class="loading" id="loading"><div class="spin"></div><div>Carregando painel…</div></div>
+  </div>
+</div>
+<div class="tag-mock" id="tagmock">MOCKUP · dados fictícios</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// SALOME — Painel de Produtividade (2ª tela · standalone)
+// Auto-refresh: 2 min · público · Consome wsGetPainelProdutividade
+// Auto-ajuste: todos os cards cabem na tela (grande ou pequena)
+// ═══════════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1rfecoojBXHiwc01QEZXAOqGLBZa48SYWtvk6tD5hzgxQJZyRS_b62MOz7RUuKdBOag/exec";
+const REFRESH_MS = 120000;                       // 2 minutos
+let FAIXA = { abaixo: 95, acima: 110 };          // % de atingimento (vem do backend)
+
+function tier(pct){
+  if(pct < FAIXA.abaixo) return {k:"abaixo", veic:"🚲", cor:"var(--red)"};
+  if(pct > FAIXA.acima)  return {k:"acima",  veic:"🚚", cor:"var(--grn)"};
+  return {k:"meta", veic:"🚗", cor:"var(--yel)"};
+}
+const TIERINFO={abaixo:{veic:"🚲",cor:"var(--red)"},meta:{veic:"🚗",cor:"var(--yel)"},acima:{veic:"🚚",cor:"var(--grn)"},sem:{veic:"—",cor:"var(--tx3)"}};
+
+function api(fn, arg){
+  if(typeof google!=="undefined" && google.script && google.script.run){
+    return new Promise((ok,err)=>{
+      const run=google.script.run.withSuccessHandler(r=>{if(r&&r.__erro)err(new Error(r.__erro));else ok(r);}).withFailureHandler(e=>err(new Error(e.message||String(e))));
+      arg!==undefined?run[fn](arg):run[fn]();
+    });
+  }
+  return fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({fn,arg:arg!==undefined?arg:null})})
+    .then(r=>r.json()).then(r=>{if(r&&r.__erro)throw new Error(r.__erro);return r;});
+}
+
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function iniciais(n){const p=(n||"?").trim().split(/\s+/);return((p[0]||"?")[0]+(p[1]?p[1][0]:"")).toUpperCase();}
+
+function tickRelogio(){document.getElementById("clk-hora").textContent=new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});}
+setInterval(tickRelogio,1000);tickRelogio();
+
+// ── calcula nº de colunas para o grid ficar equilibrado ──
+function calcCols(n){
+  if(n<=0) return 1;
+  const wrap=document.getElementById("gridwrap");
+  const ar=(wrap.clientWidth||1)/(wrap.clientHeight||1);
+  let cols=Math.round(Math.sqrt(n*ar));
+  cols=Math.max(1, Math.min(6, cols));
+  if(cols>n) cols=n;
+  return cols;
+}
+
+// ── escala o grid para caber inteiro na área visível ──
+function ajustarEscala(){
+  const wrap=document.getElementById("gridwrap"), grid=document.getElementById("grid");
+  if(!wrap||!grid) return;
+  grid.style.transform="none";
+  grid.style.width=wrap.clientWidth+"px";
+  const gh=grid.offsetHeight, gw=grid.offsetWidth || wrap.clientWidth;
+  const availH=wrap.clientHeight, availW=wrap.clientWidth;
+  let s=Math.min(availW/gw, availH/gh);
+  s=Math.max(.35, Math.min(1, s));             // só reduz (nunca corta); fica no topo
+  grid.style.transformOrigin="top center";
+  grid.style.left=((availW-gw)/2)+"px";
+  grid.style.transform="scale("+s+")";
+}
+let _rz; window.addEventListener("resize",()=>{clearTimeout(_rz);_rz=setTimeout(()=>{if(ULT)render(ULT);},150);});
+
+let ULT=null;
+function render(d){
+  ULT=d;
+  if(d.faixa){ FAIXA=d.faixa; }
+  const pessoas=d.pessoas||[];
+  document.getElementById("loading").style.display=pessoas.length?"none":"flex";
+
+  // resumo no topo
+  const na=pessoas.filter(p=>p.tier==="meta").length;
+  const ab=pessoas.filter(p=>p.tier==="abaixo").length;
+  const ac=pessoas.filter(p=>p.tier==="acima").length;
+  document.getElementById("resumo").innerHTML=
+    '<div class="rz"><div class="n" style="color:var(--grn)">'+ac+' 🚚</div><div class="l">Acima</div></div>'+
+    '<div class="rz"><div class="n" style="color:var(--yel)">'+na+' 🚗</div><div class="l">Na meta</div></div>'+
+    '<div class="rz"><div class="n" style="color:var(--red)">'+ab+' 🚲</div><div class="l">Abaixo</div></div>';
+
+  // cards
+  const cols=calcCols(pessoas.length);
+  const grid=document.getElementById("grid");
+  grid.style.gridTemplateColumns="repeat("+cols+",1fr)";
+  grid.innerHTML=pessoas.map(p=>{
+    const t=TIERINFO[p.tier]||TIERINFO.sem;
+    const ats=(p.atividades||[]).map(a=>{
+      if(a.semDado){
+        return '<div class="atv sem"><div class="atv-top"><span class="atv-nome">'+esc(a.desc||a.codigo)+'</span></div>'
+          +'<div class="bar"></div>'
+          +'<div class="atv-nums"><span>Meta <b>'+a.meta+'</b> '+esc(a.unidade||"")+'</span><span style="color:var(--tx3)">sem lançamento</span></div></div>';
+      }
+      const pct=a.meta>0?a.realizado/a.meta*100:0;
+      const at=tier(pct);
+      const w=Math.max(3,Math.min(100,pct));
+      return '<div class="atv"><div class="atv-top"><span class="atv-nome">'+esc(a.desc||a.codigo)+'</span><span class="atv-veic">'+at.veic+'</span></div>'
+        +'<div class="bar"><div class="bar-fill f-'+at.k+'" style="width:'+w+'%"></div></div>'
+        +'<div class="atv-nums"><span>Meta <b>'+a.meta+'</b> · Real <b>'+a.realizado+'</b> '+esc(a.unidade||"")+'</span><span style="color:'+at.cor+'">'+Math.round(pct)+'%</span></div></div>';
+    }).join("");
+    const pctTxt = p.tier==="sem" ? "sem dados" : Math.round(p.pctGeral)+"%";
+    return '<div class="pc t-'+p.tier+'"><div class="pc-h"><div class="av">'+esc(iniciais(p.nome))+'</div>'
+      +'<div style="min-width:0"><div class="pc-nome">'+esc(p.nome)+'</div><div class="pc-fn">'+esc(p.funcao||p.setor||"—")+'</div></div>'
+      +'<div class="pc-tier"><div class="pc-veic">'+t.veic+'</div><div class="pc-pct" style="color:'+t.cor+'">'+pctTxt+'</div></div></div>'
+      +ats+'</div>';
+  }).join("");
+
+  requestAnimationFrame(ajustarEscala);
+}
+
+function setLive(ok,hora){
+  const el=document.getElementById("live"),txt=document.getElementById("live-txt");
+  el.style.color=ok?"var(--grn)":"var(--yel)";
+  txt.textContent=ok?("ao vivo · "+(hora||"")):"sem conexão · tentando…";
+}
+
+// ── demo (enquanto o backend/deploy não estiver pronto) ──
+function gerarDemo(){
+  const base=[
+    {nome:"João Silva",funcao:"Descarga",ats:[["Descarregamento","cx/h",100],["Conferência","cx/h",60]]},
+    {nome:"Maria Santos",funcao:"Separação",ats:[["Separação de pedidos","ped/h",40],["Etiquetagem","un/h",120]]},
+    {nome:"Pedro Costa",funcao:"Carregamento",ats:[["Carregamento embarque","cx/h",90],["Paletização","plt/h",15]]},
+    {nome:"Ana Lima",funcao:"Armazém",ats:[["Movimentação","plt/h",20],["Endereçamento","un/h",80]]},
+    {nome:"Carlos Souza",funcao:"Recebimento",ats:[["Recebimento NF","nf/h",12],["Descarregamento","cx/h",100]]},
+    {nome:"Beatriz Rocha",funcao:"Expedição",ats:[["Emissão CTe","cte/h",18],["Conferência","cx/h",60]]},
+  ];
+  const pessoas=base.map(p=>{
+    const atividades=p.ats.map(([desc,un,meta])=>({codigo:desc.slice(0,6).toUpperCase(),desc,unidade:un,meta,realizado:Math.round(meta*(.6+Math.random()*.9))}));
+    const soma=atividades.reduce((s,a)=>s+(a.meta>0?a.realizado/a.meta*100:0),0);
+    const pctGeral=Math.round(soma/atividades.length);
+    const tk=pctGeral<FAIXA.abaixo?"abaixo":pctGeral>FAIXA.acima?"acima":"meta";
+    return {...p,atividades,pctGeral,tier:tk,setor:p.funcao};
+  });
+  return {ok:true,gerado_em:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),faixa:FAIXA,pessoas};
+}
+
+let carregando=false;
+async function carregar(){
+  if(carregando)return;carregando=true;
+  try{
+    let d=null;
+    try{ d=await api("wsGetPainelProdutividade",{data:""}); }catch(e){ d=null; }
+    if(!d||!d.ok||!Array.isArray(d.pessoas)||!d.pessoas.length){
+      d=gerarDemo(); document.getElementById("tagmock").style.display="block"; setLive(true,d.gerado_em+" (demo)");
+    } else {
+      document.getElementById("tagmock").style.display="none"; setLive(true,d.gerado_em);
+    }
+    render(d);
+  }catch(e){ render(gerarDemo()); setLive(false); }
+  finally{ carregando=false; }
+}
+
+let refStart=Date.now();
+setInterval(()=>{document.getElementById("refbar").style.width=Math.min(100,(Date.now()-refStart)/REFRESH_MS*100)+"%";},200);
+function ciclo(){refStart=Date.now();document.getElementById("refbar").style.width="0%";carregar();}
+ciclo();
+setInterval(ciclo,REFRESH_MS);
+document.addEventListener("keydown",e=>{if(e.key==="r"||e.key==="R")ciclo();});
+</script>
+</body>
+</html>
