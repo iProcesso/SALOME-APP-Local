@@ -381,6 +381,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100dvh
     <button class="btn bsc" onclick="atuTudo()">↻ Atualizar dados</button>
     <button class="btn" style="background:rgba(239,68,68,.12);color:var(--acc);border:1px solid rgba(239,68,68,.3)" onclick="abrirDashboard()">📊 Dashboard</button>
     <button class="btn" style="background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)" onclick="abrirPainelTV()">📺 Painel TV</button>
+    <button class="btn" style="background:rgba(52,211,153,.12);color:var(--grn);border:1px solid rgba(52,211,153,.3)" onclick="abrirPainelProdutividade()">📈 Produtividade</button>
     <button class="btn" style="background:rgba(248,113,113,.15);color:var(--red);border:1px solid rgba(248,113,113,.3)" onclick="fazerLogout()">Sair / Trocar usuário</button>
   </div>
   <nav class="nav">
@@ -1460,6 +1461,20 @@ function abrirPainelTV(){
       // GitHub Pages: abre o painel TV no mesmo diretório (público, sem token)
       const base=window.location.href.split("?")[0].replace("index.html","");
       url=base+"salome_tv_view.html";
+    }
+    window.open(url,"_blank");
+  }catch(e){toast("Não disponível neste ambiente","wa");}
+}
+
+// Painel de Produtividade (2ª tela) — GitHub: salome_prod_view.html · Apps Script: ?pg=prod
+function abrirPainelProdutividade(){
+  try{
+    let url;
+    if(typeof google!=="undefined"&&google.script&&google.script.getScriptUrl){
+      url=google.script.getScriptUrl()+"?pg=prod";
+    } else {
+      const base=window.location.href.split("?")[0].replace("index.html","");
+      url=base+"salome_prod_view.html";
     }
     window.open(url,"_blank");
   }catch(e){toast("Não disponível neste ambiente","wa");}
