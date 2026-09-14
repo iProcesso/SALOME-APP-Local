@@ -157,7 +157,9 @@ function render(d){
   ULT=d;
   if(d.faixa){ FAIXA=d.faixa; }
   const pessoas=d.pessoas||[];
-  document.getElementById("loading").style.display=pessoas.length?"none":"flex";
+  const ld=document.getElementById("loading");
+  if(!pessoas.length){ ld.style.display="flex"; ld.innerHTML='<div style="font-size:44px;opacity:.35">📊</div><div style="font-size:16px">Sem apontamentos com meta hoje</div><div style="font-size:12px;color:var(--tx3)">Empresa '+EMPRESA+'</div>'; }
+  else { ld.style.display="none"; }
 
   // resumo no topo
   const na=pessoas.filter(p=>p.tier==="meta").length;
@@ -229,9 +231,11 @@ async function carregar(){
   try{
     let d=null;
     try{ d=await api("wsGetPainelProdutividade",{data:"",empresa:EMPRESA}); }catch(e){ d=null; }
-    if(!d||!d.ok||!Array.isArray(d.pessoas)||!d.pessoas.length){
+    if(!d||!d.ok||!Array.isArray(d.pessoas)){
+      // Só usa demo quando NÃO há resposta válida do backend (ambiente de teste).
       d=gerarDemo(); document.getElementById("tagmock").style.display="block"; setLive(true,d.gerado_em+" (demo)");
     } else {
+      // Resposta válida (mesmo vazia) = dado real: nada de mockup.
       document.getElementById("tagmock").style.display="none"; setLive(true,d.gerado_em);
     }
     render(d);
