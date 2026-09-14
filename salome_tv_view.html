@@ -120,7 +120,7 @@ body{font-family:var(--f);background:radial-gradient(1200px 600px at 80% -10%,rg
     <div class="logo">S</div>
     <div class="ttl">
       <h1>SALOME · Painel de Operação</h1>
-      <div class="sub">Acompanhamento ao vivo</div>
+      <div class="sub" id="sub-emp">Acompanhamento ao vivo</div>
     </div>
     <div class="clock">
       <div class="hora" id="clk-hora">--:--:--</div>
@@ -140,10 +140,11 @@ body{font-family:var(--f);background:radial-gradient(1200px 600px at 80% -10%,rg
 // ═══════════════════════════════════════════════════════════
 // SALOME — Painel TV (standalone / GitHub Pages)
 // Consome wsGetPainelTV via mesmo padrão do dashboard (POST {fn,arg})
-// Auto-refresh: 60s · Display público (sem token)
+// Auto-refresh: 60s · Display público (sem token) · por empresa (?empresa=)
 // ═══════════════════════════════════════════════════════════
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1rfecoojBXHiwc01QEZXAOqGLBZa48SYWtvk6tD5hzgxQJZyRS_b62MOz7RUuKdBOag/exec";
 const REFRESH_MS = 60000;
+const EMPRESA = (new URLSearchParams(location.search).get("empresa") || "SJRP").toUpperCase();  // ?empresa=SJRP|OSASCO|CPS
 
 const CORES_GRUPOS = {
   "Embarcador":"#ef4444","Transporte":"#dc2626","Descarga e recebimento":"#34d399",
@@ -186,6 +187,9 @@ function tickRelogio(){
   document.getElementById("clk-data").textContent = agora.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
 }
 setInterval(tickRelogio,1000); tickRelogio();
+
+// mostra a empresa no cabeçalho e no título
+(function(){ var s=document.getElementById("sub-emp"); if(s) s.textContent="Empresa "+EMPRESA+" · acompanhamento ao vivo"; document.title="SALOME — Painel TV "+EMPRESA; })();
 
 // ── render principal ──
 function render(d){
@@ -302,7 +306,7 @@ async function carregar(){
   if(carregando) return;
   carregando=true;
   try{
-    const d = await api("wsGetPainelTV", { data: "" });
+    const d = await api("wsGetPainelTV", { data: "", empresa: EMPRESA });
     if(d && d.ok){
       render(d);
       setLive(true, d.gerado_em);
