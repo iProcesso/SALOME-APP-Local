@@ -87,8 +87,6 @@ body{font-family:var(--f);background:radial-gradient(1200px 600px at 80% -10%,rg
     <div class="loading" id="loading"><div class="spin"></div><div>Carregando painel…</div></div>
   </div>
 </div>
-<div class="tag-mock" id="tagmock">MOCKUP · dados fictícios</div>
-
 <script>
 // ═══════════════════════════════════════════════════════════
 // SALOME — Painel de Produtividade (2ª tela · standalone)
@@ -205,42 +203,33 @@ function setLive(ok,hora){
   txt.textContent=ok?("ao vivo · "+(hora||"")):"sem conexão · tentando…";
 }
 
-// ── demo (enquanto o backend/deploy não estiver pronto) ──
-function gerarDemo(){
-  const base=[
-    {nome:"João Silva",funcao:"Descarga",ats:[["Descarregamento","cx/h",100],["Conferência","cx/h",60]]},
-    {nome:"Maria Santos",funcao:"Separação",ats:[["Separação de pedidos","ped/h",40],["Etiquetagem","un/h",120]]},
-    {nome:"Pedro Costa",funcao:"Carregamento",ats:[["Carregamento embarque","cx/h",90],["Paletização","plt/h",15]]},
-    {nome:"Ana Lima",funcao:"Armazém",ats:[["Movimentação","plt/h",20],["Endereçamento","un/h",80]]},
-    {nome:"Carlos Souza",funcao:"Recebimento",ats:[["Recebimento NF","nf/h",12],["Descarregamento","cx/h",100]]},
-    {nome:"Beatriz Rocha",funcao:"Expedição",ats:[["Emissão CTe","cte/h",18],["Conferência","cx/h",60]]},
-  ];
-  const pessoas=base.map(p=>{
-    const atividades=p.ats.map(([desc,un,meta])=>({codigo:desc.slice(0,6).toUpperCase(),desc,unidade:un,meta,realizado:Math.round(meta*(.6+Math.random()*.9))}));
-    const soma=atividades.reduce((s,a)=>s+(a.meta>0?a.realizado/a.meta*100:0),0);
-    const pctGeral=Math.round(soma/atividades.length);
-    const tk=pctGeral<FAIXA.abaixo?"abaixo":pctGeral>FAIXA.acima?"acima":"meta";
-    return {...p,atividades,pctGeral,tier:tk,setor:p.funcao};
-  });
-  return {ok:true,gerado_em:new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}),faixa:FAIXA,pessoas};
-}
-
 let carregando=false;
 async function carregar(){
   if(carregando)return;carregando=true;
   try{
-    let d=null;
-    try{ d=await api("wsGetPainelProdutividade",{data:"",empresa:EMPRESA}); }catch(e){ d=null; }
-    if(!d||!d.ok||!Array.isArray(d.pessoas)){
-      // Só usa demo quando NÃO há resposta válida do backend (ambiente de teste).
-      d=gerarDemo(); document.getElementById("tagmock").style.display="block"; setLive(true,d.gerado_em+" (demo)");
+    const d=await api("wsGetPainelProdutividade",{data:"",empresa:EMPRESA});
+    if(d && d.ok && Array.isArray(d.pessoas)){
+      setLive(true,d.gerado_em);
+      render(d);                 // render trata lista vazia com "Sem apontamentos"
     } else {
-      // Resposta válida (mesmo vazia) = dado real: nada de mockup.
-      document.getElementById("tagmock").style.display="none"; setLive(true,d.gerado_em);
+      setLive(false);
+      mostrarErro((d&&d.__erro)||"Sem resposta do servidor");
     }
-    render(d);
-  }catch(e){ render(gerarDemo()); setLive(false); }
-  finally{ carregando=false; }
+  }catch(e){
+    setLive(false);
+    mostrarErro(e.message);
+  }finally{ carregando=false; }
+}
+
+// Mostra estado de erro/conexão (NUNCA dados fictícios)
+function mostrarErro(msg){
+  const g=document.getElementById("grid"); if(g) g.innerHTML="";
+  const ld=document.getElementById("loading");
+  if(!ld) return;
+  ld.style.display="flex";
+  ld.innerHTML='<div style="font-size:44px">📡</div>'
+    +'<div style="font-size:16px;font-weight:600">Não foi possível carregar</div>'
+    +'<div style="font-size:12px;color:var(--tx3);max-width:420px;text-align:center">'+esc(msg||"Verifique a conexão. Nova tentativa automática em instantes.")+'</div>';
 }
 
 let refStart=Date.now();
