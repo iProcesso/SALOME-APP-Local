@@ -67,6 +67,39 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
 .toast{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:500;opacity:0;transition:all .25s;pointer-events:none;z-index:100;}
 .toast.on{opacity:1;}.toast.ok{border-color:var(--grn);color:var(--grn);}.toast.er{border-color:var(--red);color:var(--red);}
 @media(max-width:768px){.sidebar{display:none;}.charts-grid{grid-template-columns:1fr;}.chart-card.wide{grid-column:span 1;}.filtros{padding:12px 16px;}.content{padding:16px;}.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+/* atalhos de período */
+.per-atalhos{display:flex;gap:5px;align-self:flex-end;}
+.per-b{padding:7px 10px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx2);font-family:var(--f);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;}
+.per-b:hover{border-color:var(--acc);color:var(--acc);}.per-b.on{background:rgba(239,68,68,.14);border-color:var(--acc);color:var(--acc);}
+/* semáforo / veículos */
+.sem{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:7px;font-size:11px;font-weight:600;}
+.sem-acima{background:rgba(52,211,153,.15);color:var(--grn);}
+.sem-meta{background:rgba(251,191,36,.15);color:var(--yel);}
+.sem-abaixo{background:rgba(239,68,68,.15);color:var(--acc);}
+.sem-sem{background:var(--bg3);color:var(--tx3);}
+.veic{font-size:14px;line-height:1;}
+/* tag de empresa */
+.emp-tag{display:inline-flex;align-items:center;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700;font-family:var(--m);letter-spacing:.4px;}
+.emp-SJRP{background:rgba(239,68,68,.16);color:#f87171;}
+.emp-OSASCO{background:rgba(167,139,250,.16);color:#a78bfa;}
+.emp-CPS{background:rgba(52,211,153,.16);color:#34d399;}
+.emp-OUTRA{background:var(--bg3);color:var(--tx2);}
+/* faixa de progresso meta */
+.pbar{height:7px;border-radius:4px;background:var(--bg3);overflow:hidden;position:relative;}
+.pbar-fill{height:100%;border-radius:4px;transition:width .5s ease;}
+.pbar-meta{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--tx);opacity:.5;}
+/* strip de KPIs internos */
+.stat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+.stat-mini{background:var(--card);border:1px solid var(--brd);border-radius:11px;padding:13px 15px;}
+.stat-mini-v{font-size:22px;font-weight:700;font-family:var(--m);letter-spacing:-.5px;}
+.stat-mini-l{font-size:10px;color:var(--tx3);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-top:5px;}
+/* cartões de empresa */
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:20px;}
+.emp-card{background:var(--card);border:1px solid var(--brd);border-radius:13px;padding:16px 18px;border-top:3px solid var(--brd);}
+.prod-row{display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid rgba(51,65,85,.5);}
+.prod-row:last-child{border-bottom:none;}
+.prod-rank{width:26px;text-align:center;font-family:var(--m);font-weight:700;color:var(--tx3);flex-shrink:0;}
+.prod-rank.top{color:var(--acc);}
 </style>
 </head>
 <body>
@@ -74,7 +107,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
   <aside class="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-ico">S</div>
-      <div><div class="sb-logo-txt">SALOME</div><div class="sb-logo-sub">Dashboard</div></div>
+      <div><div class="sb-logo-txt">SALOME</div><div class="sb-logo-sub">Dashboard · v55.01</div></div>
     </div>
     <nav class="sb-nav">
       <div class="sb-section">Visualização</div>
@@ -82,6 +115,10 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
       <button class="sb-item" onclick="setTab('graficos')"><span class="sb-item-ic">📊</span>Gráficos</button>
       <button class="sb-item" onclick="setTab('tabela')"><span class="sb-item-ic">📋</span>Tabela detalhada</button>
       <button class="sb-item" onclick="setTab('resumo')"><span class="sb-item-ic">📈</span>Resumo por pessoa</button>
+      <div class="sb-sep"></div>
+      <div class="sb-section">Produtividade</div>
+      <button class="sb-item" onclick="setTab('produtividade')"><span class="sb-item-ic">🎯</span>Meta × Realizado</button>
+      <button class="sb-item" onclick="setTab('empresas')"><span class="sb-item-ic">🏢</span>Empresas & Consolidado</button>
       <div class="sb-sep"></div>
       <div class="sb-section">Exportar</div>
       <button class="sb-item" onclick="exportCSV()"><span class="sb-item-ic">⬇</span>Exportar CSV</button>
@@ -98,7 +135,14 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
     <div class="filtros">
       <div class="fi-group"><div class="fi-label">De</div><input type="date" class="fi fi-date" id="f-de"></div>
       <div class="fi-group"><div class="fi-label">Até</div><input type="date" class="fi fi-date" id="f-ate"></div>
+      <div class="per-atalhos">
+        <button class="per-b" id="per-hoje" onclick="setPeriodo('hoje')">Hoje</button>
+        <button class="per-b on" id="per-7" onclick="setPeriodo(7)">7 dias</button>
+        <button class="per-b" id="per-30" onclick="setPeriodo(30)">30 dias</button>
+        <button class="per-b" id="per-mes" onclick="setPeriodo('mes')">Mês</button>
+      </div>
       <div class="fi-divider"></div>
+      <div class="fi-group"><div class="fi-label">Empresa</div><select class="fi" id="f-empresa" onchange="aplicarFiltros()"><option value="">Todas</option></select></div>
       <div class="fi-group"><div class="fi-label">Pessoa</div><select class="fi" id="f-pessoa"><option value="">Todos</option></select></div>
       <div class="fi-group"><div class="fi-label">Atividade</div><select class="fi" id="f-ativ"><option value="">Todas</option></select></div>
       <div class="fi-group"><div class="fi-label">Grupo</div><select class="fi" id="f-grupo"><option value="">Todos</option></select></div>
@@ -126,6 +170,8 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
         <button class="tab-btn" id="tab-graficos" onclick="setTab('graficos')">📊 Gráficos</button>
         <button class="tab-btn" id="tab-tabela" onclick="setTab('tabela')">📋 Tabela</button>
         <button class="tab-btn" id="tab-resumo" onclick="setTab('resumo')">📈 Por pessoa</button>
+        <button class="tab-btn" id="tab-produtividade" onclick="setTab('produtividade')">🎯 Produtividade</button>
+        <button class="tab-btn" id="tab-empresas" onclick="setTab('empresas')">🏢 Empresas</button>
       </div>
       <div id="view-timeline"><div class="chart-card"><div class="chart-title">Linha do tempo por pessoa</div><div class="chart-sub">Cada bloco representa um apontamento. Passe o mouse para ver detalhes.</div><div id="timeline-container"><div class="loading-state"><div class="spin"></div><div style="font-size:13px;color:var(--tx3)">Carregando...</div></div></div></div></div>
       <div id="view-graficos" style="display:none">
@@ -152,6 +198,45 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
         </div>
       </div>
       <div id="view-resumo" style="display:none"><div id="resumo-grid" class="charts-grid"></div></div>
+
+      <div id="view-produtividade" style="display:none">
+        <div class="stat-strip" id="prod-strip"></div>
+        <div class="charts-grid">
+          <div class="chart-card wide"><div class="chart-title">🎯 Atingimento por atividade</div><div class="chart-sub">Realizado ÷ meta (%) — só atividades com meta cadastrada e quantidade lançada</div><div class="chart-wrap tall"><canvas id="chart-prod-ativ"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Tendência de produtividade</div><div class="chart-sub">% médio de atingimento por dia</div><div class="chart-wrap"><canvas id="chart-prod-tend"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Distribuição do semáforo</div><div class="chart-sub">Nº de atividades medidas por faixa</div><div class="chart-wrap"><canvas id="chart-prod-sem"></canvas></div></div>
+        </div>
+        <div class="table-card" style="margin-bottom:20px">
+          <div class="table-hdr"><div class="table-title">🏆 Ranking de profissionais</div><div style="font-size:11px;color:var(--tx3)">por % de atingimento de meta</div></div>
+          <div id="prod-ranking"></div>
+        </div>
+        <div class="table-card">
+          <div class="table-hdr"><div class="table-title">Meta × Realizado por atividade</div></div>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Empresa</th><th>Atividade</th><th>Meta</th><th>Realizado</th><th>%</th><th>Semáforo</th></tr></thead><tbody id="prod-tbl-body"></tbody></table></div>
+          <div id="prod-vazio"></div>
+        </div>
+      </div>
+
+      <div id="view-empresas" style="display:none">
+        <div class="emp-grid" id="emp-cards"></div>
+        <div class="charts-grid">
+          <div class="chart-card"><div class="chart-title">Ocupação por empresa</div><div class="chart-sub">% do tempo em atividade produtiva</div><div class="chart-wrap"><canvas id="chart-emp-ocup"></canvas></div></div>
+          <div class="chart-card"><div class="chart-title">Eficiência por empresa</div><div class="chart-sub">% médio de atingimento de meta</div><div class="chart-wrap"><canvas id="chart-emp-efic"></canvas></div></div>
+        </div>
+        <div class="table-card">
+          <div class="table-hdr"><div class="table-title">Consolidado — unidade × profissional</div><div class="table-actions"><button class="tb-btn" onclick="exportCSV()">⬇ CSV</button></div></div>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr>
+            <th onclick="sortCons('empresa')" style="cursor:pointer">Unidade</th>
+            <th onclick="sortCons('pessoa')" style="cursor:pointer">Profissional</th>
+            <th onclick="sortCons('apont')" style="cursor:pointer">Apont.</th>
+            <th onclick="sortCons('prod')" style="cursor:pointer">Produtivo</th>
+            <th onclick="sortCons('ocup')" style="cursor:pointer">Ocupação</th>
+            <th onclick="sortCons('efic')" style="cursor:pointer">Eficiência</th>
+            <th>Semáforo</th>
+          </tr></thead><tbody id="cons-tbl-body"></tbody></table></div>
+          <div style="padding:10px 18px;font-size:11px;color:var(--tx3);border-top:1px solid var(--brd)" id="cons-count"></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -163,6 +248,20 @@ const CORES_GRUPOS={"Embarcador":"#ef4444","Transporte":"#dc2626","Descarga e re
 function corAtiv(cod,grupo){return cod===INAT?"#475569":CORES_GRUPOS[grupo]||"#ef4444";}
 let DADOS_RAW=[],DADOS_FILT=[],CHARTS={},SORT_COL="data_inicio",SORT_DIR=1;
 let DASH_TOKEN="";
+
+// ── Produtividade / empresas (v55.01) ─────────────────────
+let FAIXA={abaixo:95,acima:110};
+const EMP_CORES={SJRP:"#f87171",OSASCO:"#a78bfa",CPS:"#34d399"};
+function empClass(e){return ["SJRP","OSASCO","CPS"].indexOf(e)>=0?"emp-"+e:"emp-OUTRA";}
+function empCor(e){return EMP_CORES[e]||"#94a3b8";}
+function empTag(e){return e?`<span class="emp-tag ${empClass(e)}">${e}</span>`:"";}
+function tierDe(pct){return pct>FAIXA.acima?"acima":pct<FAIXA.abaixo?"abaixo":"meta";}
+function veic(t){return t==="acima"?"🚚":t==="meta"?"🚗":t==="abaixo"?"🚲":"⚪";}
+function tierLbl(t){return t==="acima"?"Acima":t==="meta"?"Na meta":t==="abaixo"?"Abaixo":"Sem dado";}
+function semColor(t){return t==="acima"?"var(--grn)":t==="meta"?"var(--yel)":t==="abaixo"?"var(--acc)":"var(--tx3)";}
+function semHex(t){return t==="acima"?"#34d399":t==="meta"?"#fbbf24":t==="abaixo"?"#ef4444":"#64748b";}
+function semHTML(t,pct){return `<span class="sem sem-${t}"><span class="veic">${veic(t)}</span>${tierLbl(t)}${pct!=null?" · "+pct+"%":""}</span>`;}
+let CONS_SORT="efic",CONS_DIR=-1,CONS_CACHE=[];
 
 function getToken(){
   // 1. DASH_TOKEN já injetado pelo doGet (Apps Script)
@@ -215,29 +314,43 @@ async function carregarDados(){
   try{
     const de=document.getElementById("f-de").value,ate=document.getElementById("f-ate").value;
     const token=getToken();
-    const res=await api("wsGetTodosApontamentos",{de,ate,token});
+    const res=await api("wsGetApontamentosMultiEmpresa",{de,ate,token});
     if(res&&res.__erro){toast(res.__erro+" — dados de demonstração","er");DADOS_RAW=gerarDemo();}
-    else DADOS_RAW=Array.isArray(res)?res:(res&&res.data?res.data:gerarDemo());
+    else if(res&&res.dados){DADOS_RAW=res.dados;if(res.faixa)FAIXA=res.faixa;}
+    else DADOS_RAW=Array.isArray(res)?res:gerarDemo();
   }catch(e){console.log("Demo:",e.message);DADOS_RAW=gerarDemo();}
   preencherFiltros();aplicarFiltros();
 }
 
 function gerarDemo(){
-  const pessoas=["João Silva","Maria Santos","Pedro Costa","Ana Lima"];
-  const ativs=[{codigo:"EMBARCADOR-001",desc:"Aguardando liberação",grupo:"Embarcador"},{codigo:"TRANSPORTE-001",desc:"Dirigindo",grupo:"Transporte"},{codigo:"DESCARGA-001",desc:"Descarregamento",grupo:"Descarga e recebimento"},{codigo:"ARMAZEM-001",desc:"Movimentação",grupo:"Armazém"},{codigo:"CARGA-002",desc:"Carregamento embarque",grupo:"Carga e embarque"},{codigo:INAT,desc:"Inativo",grupo:"Sistema"}];
+  const pessoas=[["João Silva","SJRP"],["Maria Santos","OSASCO"],["Pedro Costa","CPS"],["Ana Lima","SJRP"],["Carlos Souza","OSASCO"],["Beatriz Rocha","CPS"]];
+  // metrica/meta ilustrativos: só algumas atividades têm meta
+  const ativs=[
+    {codigo:"EMBARCADOR-001",desc:"Aguardando liberação",grupo:"Embarcador",meta:0,unidade:"",metrica:""},
+    {codigo:"TRANSPORTE-001",desc:"Dirigindo",grupo:"Transporte",meta:0,unidade:"",metrica:""},
+    {codigo:"DESCARGA-001",desc:"Descarregamento",grupo:"Descarga e recebimento",meta:12,unidade:"paletes/h",metrica:"paletes"},
+    {codigo:"ARMAZEM-001",desc:"Movimentação",grupo:"Armazém",meta:30,unidade:"volumes/h",metrica:"volume"},
+    {codigo:"ARMAZEM-003",desc:"Separação para expedição",grupo:"Armazém",meta:40,unidade:"volumes/h",metrica:"volume"},
+    {codigo:"CARGA-002",desc:"Carregamento embarque",grupo:"Carga e embarque",meta:18,unidade:"paletes/h",metrica:"paletes"},
+    {codigo:INAT,desc:"Inativo",grupo:"Sistema",meta:0,unidade:"",metrica:""}
+  ];
   const dados=[],hoje=new Date();
-  for(let d=6;d>=0;d--){
+  for(let d=13;d>=0;d--){
     const data=new Date(hoje);data.setDate(hoje.getDate()-d);
     const ds=data.toISOString().split("T")[0];
-    pessoas.forEach((p,pi)=>{
-      let h=7+pi*.5;
+    pessoas.forEach(([p,emp],pi)=>{
+      let h=7+pi*.4;
       for(let i=0;i<6+Math.floor(Math.random()*4);i++){
         const a=ativs[Math.floor(Math.random()*ativs.length)];
         const dur=15+Math.floor(Math.random()*90);
         const hI=`${String(Math.floor(h)).padStart(2,"0")}:${String(Math.floor((h%1)*60)).padStart(2,"0")}`;
         h+=dur/60;
         const hF=h<18?`${String(Math.floor(h)).padStart(2,"0")}:${String(Math.floor((h%1)*60)).padStart(2,"0")}`:"18:00";
-        dados.push({id_apontamento:Math.random().toString(36),pessoa_nome:p,pessoa_email:p.toLowerCase().replace(" ",".")+"@demo.com",atividade_codigo:a.codigo,atividade_desc:a.desc,grupo:a.grupo,data_inicio:ds,hora_inicio:hI,hora_fim:hF,setor:["SET-001","SET-002","SET-003","SET-004"][pi%4],area:["AR-001","AR-002","AR-003"][i%3],status:["Realizado","Realizado","Realizado","Concluído","Pendente"][Math.floor(Math.random()*5)]});
+        const horas=Math.max(.1,dur/60);
+        // se tem meta, gera quantidade em torno da meta (0.7x a 1.4x) para variar o semáforo
+        let qtd=0,realizado=0;
+        if(a.meta>0){qtd=Math.round(a.meta*horas*(0.7+Math.random()*0.7));realizado=Math.round(qtd/horas);}
+        dados.push({empresa:emp,id_apontamento:Math.random().toString(36),pessoa_nome:p,pessoa_email:p.toLowerCase().replace(" ",".")+"@demo.com",atividade_codigo:a.codigo,atividade_desc:a.desc,grupo:a.grupo,data_inicio:ds,hora_inicio:hI,hora_fim:hF,setor:["SET-001","SET-002","SET-003","SET-004"][pi%4],area:["AR-001","AR-002","AR-003"][i%3],status:["Realizado","Realizado","Realizado","Concluído","Pendente"][Math.floor(Math.random()*5)],meta:a.meta,unidade:a.unidade,metrica:a.metrica,qtd:qtd,realizado:realizado,minutos:dur});
         if(h>=18)break;h+=.1;
       }
     });
@@ -255,14 +368,21 @@ function preencherFiltros(){
   sA.innerHTML='<option value="">Todas as atividades</option>'+ativs.map(a=>`<option value="${a}">${a}</option>`).join("");
   sG.innerHTML='<option value="">Todos os grupos</option>'+grupos.map(g=>`<option value="${g}">${g}</option>`).join("");
   if(cP)sP.value=cP;if(cA)sA.value=cA;if(cG)sG.value=cG;
+  // empresa
+  const empresas=[...new Set(DADOS_RAW.map(d=>d.empresa).filter(Boolean))].sort();
+  const sE=document.getElementById("f-empresa");const cE=sE.value;
+  sE.innerHTML='<option value="">Todas as empresas</option>'+empresas.map(e=>`<option value="${e}">${e}</option>`).join("");
+  if(cE)sE.value=cE;
 }
 
 function aplicarFiltros(){
   const de=document.getElementById("f-de").value,ate=document.getElementById("f-ate").value;
   const pessoa=document.getElementById("f-pessoa").value,ativ=document.getElementById("f-ativ").value;
   const grupo=document.getElementById("f-grupo").value,status=document.getElementById("f-status").value;
+  const empresa=document.getElementById("f-empresa").value;
   DADOS_FILT=DADOS_RAW.filter(d=>{
     if(de&&d.data_inicio<de)return false;if(ate&&d.data_inicio>ate)return false;
+    if(empresa&&d.empresa!==empresa)return false;
     if(pessoa&&d.pessoa_nome!==pessoa)return false;if(ativ&&d.atividade_codigo!==ativ)return false;
     if(grupo&&(d.grupo||"Outros")!==grupo)return false;if(status&&d.status!==status)return false;
     return true;
@@ -275,8 +395,19 @@ function limparFiltros(){
   const hoje=new Date(),semana=new Date(hoje);semana.setDate(hoje.getDate()-6);
   document.getElementById("f-de").value=semana.toISOString().split("T")[0];
   document.getElementById("f-ate").value=hoje.toISOString().split("T")[0];
-  ["f-pessoa","f-ativ","f-grupo","f-status"].forEach(id=>document.getElementById(id).value="");
+  ["f-pessoa","f-ativ","f-grupo","f-status","f-empresa"].forEach(id=>document.getElementById(id).value="");
+  marcarPer("per-7");
   aplicarFiltros();
+}
+function marcarPer(id){["per-hoje","per-7","per-30","per-mes"].forEach(x=>{const b=document.getElementById(x);if(b)b.classList.toggle("on",x===id);});}
+function setPeriodo(p){
+  const hoje=new Date();let ini=new Date(hoje);
+  if(p==="hoje"){marcarPer("per-hoje");}
+  else if(p==="mes"){ini=new Date(hoje.getFullYear(),hoje.getMonth(),1);marcarPer("per-mes");}
+  else{ini.setDate(hoje.getDate()-(p-1));marcarPer(p===7?"per-7":p===30?"per-30":"");}
+  document.getElementById("f-de").value=ini.toISOString().split("T")[0];
+  document.getElementById("f-ate").value=hoje.toISOString().split("T")[0];
+  carregarDados();
 }
 
 function calcMin(arr){return arr.reduce((acc,d)=>{if(!d.hora_inicio||!d.hora_fim)return acc;const[h1,m1,s1]=(d.hora_inicio+":0").split(":").map(Number);const[h2,m2,s2]=(d.hora_fim+":0").split(":").map(Number);const diff=(h2*60+m2+(s2||0)/60)-(h1*60+m1+(s1||0)/60);return acc+Math.max(0,diff);},0);}
@@ -303,14 +434,21 @@ function atuKPIs(){
 let tabAtual="timeline";
 function setTab(tab){
   tabAtual=tab;
-  ["timeline","graficos","tabela","resumo"].forEach(t=>{
-    document.getElementById("view-"+t).style.display=t===tab?"block":"none";
-    document.getElementById("tab-"+t).classList.toggle("on",t===tab);
-    const sb=document.querySelector(`.sb-item[onclick*="${t}"]`);if(sb)sb.classList.toggle("on",t===tab);
+  ["timeline","graficos","tabela","resumo","produtividade","empresas"].forEach(t=>{
+    const v=document.getElementById("view-"+t);if(v)v.style.display=t===tab?"block":"none";
+    const tb=document.getElementById("tab-"+t);if(tb)tb.classList.toggle("on",t===tab);
+    const sb=document.querySelector(`.sb-item[onclick*="'${t}'"]`);if(sb)sb.classList.toggle("on",t===tab);
   });
   renderTabAtual();
 }
-function renderTabAtual(){if(tabAtual==="timeline")renderTL();else if(tabAtual==="graficos")renderG();else if(tabAtual==="tabela")renderTbl();else renderResumo();}
+function renderTabAtual(){
+  if(tabAtual==="timeline")renderTL();
+  else if(tabAtual==="graficos")renderG();
+  else if(tabAtual==="tabela")renderTbl();
+  else if(tabAtual==="resumo")renderResumo();
+  else if(tabAtual==="produtividade")renderProd();
+  else if(tabAtual==="empresas")renderEmpresas();
+}
 
 function renderTL(){
   const el=document.getElementById("timeline-container");
@@ -424,8 +562,8 @@ function renderResumo(){
 }
 
 function exportCSV(){
-  const h=["data","pessoa","atividade_codigo","atividade","grupo","hora_inicio","hora_fim","duracao_min","setor","area","status"];
-  const rows=DADOS_FILT.map(d=>[d.data_inicio,d.pessoa_nome,d.atividade_codigo,d.atividade_desc||"",d.grupo||"",d.hora_inicio||"",d.hora_fim||"",Math.round(calcMin([d])),d.setor||"",d.area||"",d.status||""].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(","));
+  const h=["empresa","data","pessoa","atividade_codigo","atividade","grupo","hora_inicio","hora_fim","duracao_min","meta","unidade","quantidade","realizado","setor","area","status"];
+  const rows=DADOS_FILT.map(d=>[d.empresa||"",d.data_inicio,d.pessoa_nome,d.atividade_codigo,d.atividade_desc||"",d.grupo||"",d.hora_inicio||"",d.hora_fim||"",Math.round(_minRow(d)),d.meta||"",d.unidade||"",d.qtd||"",d.realizado||"",d.setor||"",d.area||"",d.status||""].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(","));
   const csv=[h.join(","),...rows].join("\n");
   const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");
@@ -441,6 +579,119 @@ function exportJSON(){
 }
 
 function toast(msg,tipo){const el=document.getElementById("toast");el.textContent=msg;el.className="toast on"+(tipo?" "+tipo:"");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),2800);}
+
+// ══════════ PRODUTIVIDADE / EMPRESAS (v55.01) ══════════
+function _minRow(d){if(typeof d.minutos==="number"&&d.minutos>0)return d.minutos;return calcMin([d]);}
+
+function prodAgg(rows){
+  // unidades medidas por (empresa|codigo)
+  const uni={};
+  rows.forEach(d=>{
+    const meta=+d.meta||0,qtd=+d.qtd||0;if(meta<=0)return;
+    const emp=d.empresa||"—",cod=d.atividade_codigo,k=emp+"||"+cod;
+    if(!uni[k])uni[k]={empresa:emp,codigo:cod,desc:d.atividade_desc||cod,unidade:d.unidade||"",meta:meta,qtd:0,min:0};
+    uni[k].qtd+=qtd;uni[k].min+=_minRow(d);
+  });
+  const unidades=Object.values(uni).filter(u=>u.qtd>0&&u.min>0).map(u=>{
+    const realizado=Math.round(u.qtd/(u.min/60)),pct=Math.round(realizado/u.meta*100);
+    return Object.assign(u,{realizado,pct,tier:tierDe(pct)});
+  });
+  // por pessoa (empresa|pessoa)
+  const pmap={};
+  rows.forEach(d=>{
+    const meta=+d.meta||0,qtd=+d.qtd||0;if(meta<=0||qtd<=0)return;
+    const emp=d.empresa||"—",pes=d.pessoa_nome||"?",cod=d.atividade_codigo,pk=emp+"||"+pes;
+    if(!pmap[pk])pmap[pk]={empresa:emp,pessoa:pes,cods:{}};
+    if(!pmap[pk].cods[cod])pmap[pk].cods[cod]={meta,qtd:0,min:0};
+    pmap[pk].cods[cod].qtd+=qtd;pmap[pk].cods[cod].min+=_minRow(d);
+  });
+  const pessoas=Object.values(pmap).map(p=>{
+    const pcts=Object.values(p.cods).filter(c=>c.min>0&&c.qtd>0).map(c=>Math.round(c.qtd/(c.min/60))/c.meta*100);
+    if(!pcts.length)return null;
+    const pct=Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
+    return {empresa:p.empresa,pessoa:p.pessoa,pct,tier:tierDe(pct),n:pcts.length};
+  }).filter(Boolean).sort((a,b)=>b.pct-a.pct);
+  // tendência por dia
+  const dmap={};
+  rows.forEach(d=>{const meta=+d.meta||0,qtd=+d.qtd||0;if(meta<=0||qtd<=0)return;const day=d.data_inicio,k=(d.empresa||"")+"||"+d.atividade_codigo;dmap[day]=dmap[day]||{};dmap[day][k]=dmap[day][k]||{meta,qtd:0,min:0};dmap[day][k].qtd+=qtd;dmap[day][k].min+=_minRow(d);});
+  const tendencia=Object.keys(dmap).sort().map(day=>{const us=Object.values(dmap[day]).filter(u=>u.min>0&&u.qtd>0).map(u=>Math.round(u.qtd/(u.min/60))/u.meta*100);return {day,pct:us.length?Math.round(us.reduce((a,b)=>a+b,0)/us.length):0};});
+  const pctGeral=unidades.length?Math.round(unidades.reduce((a,u)=>a+u.pct,0)/unidades.length):0;
+  const comQtd=rows.filter(d=>(+d.qtd||0)>0).length;
+  const semDist={acima:0,meta:0,abaixo:0};unidades.forEach(u=>semDist[u.tier]++);
+  return {unidades,pessoas,tendencia,pctGeral,medidas:unidades.length,cobertura:rows.length?Math.round(comQtd/rows.length*100):0,semDist};
+}
+
+function renderProd(){
+  const A=prodAgg(DADOS_FILT);
+  document.getElementById("prod-strip").innerHTML=[
+    ["Eficiência média",A.pctGeral+"%",semColor(tierDe(A.pctGeral))],
+    ["Atividades medidas",A.medidas,"var(--tx)"],
+    ["Profissionais medidos",A.pessoas.length,"var(--pur)"],
+    ["Cobertura de quantidade",A.cobertura+"%",A.cobertura<30?"var(--acc)":"var(--grn)"]
+  ].map(x=>`<div class="stat-mini"><div class="stat-mini-v" style="color:${x[2]}">${x[1]}</div><div class="stat-mini-l">${x[0]}</div></div>`).join("");
+
+  const showEmp=!document.getElementById("f-empresa").value;
+  dC("prod-ativ");
+  const us=[...A.unidades].sort((a,b)=>b.pct-a.pct).slice(0,14);
+  if(us.length){
+    CHARTS["prod-ativ"]=new Chart(document.getElementById("chart-prod-ativ"),{type:"bar",data:{labels:us.map(u=>((u.desc.length>22?u.desc.slice(0,20)+"…":u.desc))+(showEmp?" ["+u.empresa+"]":"")),datasets:[{data:us.map(u=>u.pct),backgroundColor:us.map(u=>semHex(u.tier)),borderRadius:4}]},options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x+"% da meta"}}},scales:{x:Object.assign({},CD.scales.x),y:{ticks:{color:"#94a3b8",font:{family:"'DM Sans'",size:11}},grid:{display:false}}}}});
+  }
+  dC("prod-tend");
+  CHARTS["prod-tend"]=new Chart(document.getElementById("chart-prod-tend"),{type:"line",data:{labels:A.tendencia.map(t=>t.day.split("-").slice(1).reverse().join("/")),datasets:[{label:"% atingimento",data:A.tendencia.map(t=>t.pct),borderColor:"#ef4444",backgroundColor:"rgba(239,68,68,.12)",tension:.3,fill:true,pointRadius:3}]},options:Object.assign({},CD,{plugins:{legend:{display:false}},scales:{x:CD.scales.x,y:Object.assign({},CD.scales.y,{suggestedMin:0,suggestedMax:130})}})});
+  dC("prod-sem");
+  CHARTS["prod-sem"]=new Chart(document.getElementById("chart-prod-sem"),{type:"doughnut",data:{labels:["🚚 Acima","🚗 Na meta","🚲 Abaixo"],datasets:[{data:[A.semDist.acima,A.semDist.meta,A.semDist.abaixo],backgroundColor:["#34d399","#fbbf24","#ef4444"],borderWidth:2,borderColor:"#1e293b"}]},options:{plugins:{legend:{position:"bottom",labels:{color:"#94a3b8",font:{family:"'DM Sans'"},padding:10}}},cutout:"60%"}});
+
+  const rk=document.getElementById("prod-ranking");
+  if(!A.pessoas.length)rk.innerHTML=`<div class="empty-state"><div class="empty-ico">🎯</div><div>Sem dados de meta × realizado no período.</div><div style="font-size:12px;margin-top:6px">Preencha meta/unidade/metrica na aba Atividades e lance a quantidade no encerramento.</div></div>`;
+  else rk.innerHTML=A.pessoas.map((p,i)=>`<div class="prod-row"><div class="prod-rank ${i<3?'top':''}">${i+1}º</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;color:var(--tx)">${p.pessoa} ${empTag(p.empresa)}</div><div style="font-size:11px;color:var(--tx3)">${p.n} atividade(s) medida(s)</div></div><div style="width:110px"><div class="pbar"><div class="pbar-fill" style="width:${Math.min(100,p.pct)}%;background:${semColor(p.tier)}"></div></div></div><div style="width:130px;text-align:right">${semHTML(p.tier,p.pct)}</div></div>`).join("");
+
+  const ua=[...A.unidades].sort((a,b)=>a.empresa===b.empresa?b.pct-a.pct:(a.empresa>b.empresa?1:-1));
+  document.getElementById("prod-tbl-body").innerHTML=ua.map(u=>`<tr><td>${empTag(u.empresa)}</td><td><span style="font-family:var(--m);font-size:11px;color:var(--acc)">${u.codigo}</span><br><span style="font-size:11px">${u.desc}</span></td><td style="font-family:var(--m)">${u.meta} ${u.unidade||""}</td><td style="font-family:var(--m);font-weight:600">${u.realizado}</td><td style="font-family:var(--m);color:${semColor(u.tier)}">${u.pct}%</td><td>${semHTML(u.tier)}</td></tr>`).join("");
+  document.getElementById("prod-vazio").innerHTML=ua.length?"":`<div class="empty-state"><div class="empty-ico">📋</div><div>Nenhuma atividade com meta e quantidade no período.</div></div>`;
+}
+
+function renderEmpresas(){
+  const A=prodAgg(DADOS_FILT);
+  const efPorEmp={};A.unidades.forEach(u=>{(efPorEmp[u.empresa]=efPorEmp[u.empresa]||[]).push(u.pct);});
+  const mediaEmp=e=>efPorEmp[e]&&efPorEmp[e].length?Math.round(efPorEmp[e].reduce((a,b)=>a+b,0)/efPorEmp[e].length):null;
+  const empresas=[...new Set(DADOS_FILT.map(d=>d.empresa).filter(Boolean))].sort();
+
+  const cards=document.getElementById("emp-cards");
+  if(!empresas.length)cards.innerHTML=`<div class="empty-state" style="grid-column:1/-1"><div class="empty-ico">🏢</div><div>Sem dados de empresa no período.</div></div>`;
+  else cards.innerHTML=empresas.map(e=>{
+    const rows=DADOS_FILT.filter(d=>d.empresa===e);
+    const mP=calcMin(rows.filter(d=>d.atividade_codigo!==INAT)),mI=calcMin(rows.filter(d=>d.atividade_codigo===INAT)),mT=mP+mI;
+    const ocup=mT>0?Math.round(mP/mT*100):0,ef=mediaEmp(e),pessoas=new Set(rows.map(d=>d.pessoa_nome)).size;
+    return `<div class="emp-card" style="border-top-color:${empCor(e)}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><div style="font-size:16px;font-weight:700">${e}</div>${ef!=null?semHTML(tierDe(ef),ef):'<span class="sem sem-sem">sem meta</span>'}</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><div style="font-size:20px;font-weight:700;font-family:var(--m)">${rows.length}</div><div style="font-size:10px;color:var(--tx3)">apontamentos</div></div>
+        <div><div style="font-size:20px;font-weight:700;font-family:var(--m);color:var(--pur)">${pessoas}</div><div style="font-size:10px;color:var(--tx3)">profissionais</div></div>
+        <div><div style="font-size:20px;font-weight:700;font-family:var(--m);color:var(--grn)">${fmtMin(mP)}</div><div style="font-size:10px;color:var(--tx3)">produtivo</div></div>
+        <div><div style="font-size:20px;font-weight:700;font-family:var(--m);color:var(--acc)">${ocup}%</div><div style="font-size:10px;color:var(--tx3)">ocupação</div></div>
+      </div></div>`;
+  }).join("");
+
+  dC("emp-ocup");
+  const ocupData=empresas.map(e=>{const rows=DADOS_FILT.filter(d=>d.empresa===e);const mP=calcMin(rows.filter(d=>d.atividade_codigo!==INAT)),mT=mP+calcMin(rows.filter(d=>d.atividade_codigo===INAT));return mT>0?Math.round(mP/mT*100):0;});
+  CHARTS["emp-ocup"]=new Chart(document.getElementById("chart-emp-ocup"),{type:"bar",data:{labels:empresas,datasets:[{data:ocupData,backgroundColor:empresas.map(e=>empCor(e)),borderRadius:5}]},options:{plugins:{legend:{display:false}},scales:{x:CD.scales.x,y:Object.assign({},CD.scales.y,{suggestedMax:100})}}});
+  dC("emp-efic");
+  const eficData=empresas.map(e=>mediaEmp(e)||0);
+  CHARTS["emp-efic"]=new Chart(document.getElementById("chart-emp-efic"),{type:"bar",data:{labels:empresas,datasets:[{data:eficData,backgroundColor:empresas.map(e=>empCor(e)),borderRadius:5}]},options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.y+"% da meta"}}},scales:{x:CD.scales.x,y:Object.assign({},CD.scales.y,{suggestedMax:130})}}});
+
+  const cmap={};
+  DADOS_FILT.forEach(d=>{const k=(d.empresa||"—")+"||"+(d.pessoa_nome||"?");if(!cmap[k])cmap[k]={empresa:d.empresa||"—",pessoa:d.pessoa_nome||"?",apont:0,mP:0,mI:0};cmap[k].apont++;const m=_minRow(d);if(d.atividade_codigo===INAT)cmap[k].mI+=m;else cmap[k].mP+=m;});
+  const efP={};A.pessoas.forEach(p=>{efP[p.empresa+"||"+p.pessoa]=p;});
+  CONS_CACHE=Object.keys(cmap).map(k=>{const c=cmap[k],mT=c.mP+c.mI,ocup=mT>0?Math.round(c.mP/mT*100):0,pe=efP[k];return {empresa:c.empresa,pessoa:c.pessoa,apont:c.apont,prod:c.mP,ocup,efic:pe?pe.pct:null,tier:pe?pe.tier:"sem"};});
+  renderCons();
+}
+function renderCons(){
+  const arr=[...CONS_CACHE].sort((a,b)=>{let va=a[CONS_SORT],vb=b[CONS_SORT];if(va==null)va=-1;if(vb==null)vb=-1;if(typeof va==="string")return (va>vb?1:va<vb?-1:0)*CONS_DIR;return (va-vb)*CONS_DIR;});
+  document.getElementById("cons-tbl-body").innerHTML=arr.map(r=>`<tr><td>${empTag(r.empresa)}</td><td style="color:var(--tx)">${r.pessoa}</td><td style="font-family:var(--m)">${r.apont}</td><td style="font-family:var(--m)">${fmtMin(r.prod)}</td><td style="font-family:var(--m)">${r.ocup}%</td><td style="font-family:var(--m);color:${r.efic!=null?semColor(r.tier):'var(--tx3)'}">${r.efic!=null?r.efic+"%":"—"}</td><td>${r.efic!=null?semHTML(r.tier):'<span class="sem sem-sem">sem meta</span>'}</td></tr>`).join("")||`<tr><td colspan="7" style="text-align:center;color:var(--tx3);padding:24px">Sem dados no período.</td></tr>`;
+  document.getElementById("cons-count").textContent=`${arr.length} linha(s) · unidade × profissional`;
+}
+function sortCons(col){if(CONS_SORT===col)CONS_DIR*=-1;else{CONS_SORT=col;CONS_DIR=(col==="empresa"||col==="pessoa")?1:-1;}renderCons();}
+
 init();
 </script>
 </body>
