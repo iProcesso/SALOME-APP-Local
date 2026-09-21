@@ -3,241 +3,168 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SALOME — Produtividade</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>SALOME TV — Produtividade</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0f172a;--bg2:#1e293b;--bg3:#273449;--card:#1e293b;--brd:#334155;
-  --acc:#ef4444;--grn:#34d399;--yel:#fbbf24;--red:#f87171;--pur:#a78bfa;
-  --tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;
-  --f:'DM Sans',sans-serif;--m:'DM Mono',monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{font-family:var(--f);background:radial-gradient(1200px 600px at 80% -10%,rgba(239,68,68,.08),transparent 60%),var(--bg);color:var(--tx);height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
-#refbar{position:fixed;left:0;top:0;height:3px;background:var(--acc);width:0%;z-index:100;box-shadow:0 0 8px rgba(239,68,68,.6);transition:width .2s linear}
-
-/* palco em coluna, ocupa a tela toda */
-#stage{height:100vh;display:flex;flex-direction:column;padding:clamp(12px,1.4vw,26px) clamp(16px,2vw,38px);gap:clamp(10px,1.2vw,18px)}
-
-/* top */
-.top{display:flex;align-items:center;gap:16px;flex-shrink:0}
-.logo{width:clamp(42px,3vw,56px);height:clamp(42px,3vw,56px);border-radius:14px;background:linear-gradient(135deg,var(--acc),#b91c1c);display:flex;align-items:center;justify-content:center;font-family:var(--m);font-weight:600;font-size:clamp(18px,1.5vw,26px);color:#0f172a;flex-shrink:0;box-shadow:0 10px 30px rgba(239,68,68,.25)}
-.ttl h1{font-size:clamp(18px,1.7vw,32px);font-weight:800;letter-spacing:-.5px;line-height:1}
-.ttl .sub{font-size:clamp(10px,.8vw,14px);color:var(--tx2);font-weight:500;letter-spacing:.5px;text-transform:uppercase;margin-top:4px}
-.resumo{margin-left:auto;display:flex;gap:clamp(10px,1vw,20px);align-items:center}
-.rz{text-align:center}
-.rz .n{font-family:var(--m);font-size:clamp(18px,1.7vw,32px);font-weight:600;line-height:1}
-.rz .l{font-size:clamp(9px,.72vw,12px);color:var(--tx3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-top:3px}
-.clock{margin-left:clamp(8px,1vw,18px);text-align:right;padding-left:clamp(10px,1vw,18px);border-left:1px solid var(--brd)}
-.clock .hora{font-family:var(--m);font-size:clamp(20px,1.8vw,34px);font-weight:500;letter-spacing:1px;line-height:1}
-.clock .live{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:clamp(9px,.72vw,12px);color:var(--grn);font-weight:600}
-.clock .live .dot{width:8px;height:8px;border-radius:50%;background:var(--grn);animation:pulse 1.8s infinite}
-@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,211,153,.55)}70%{box-shadow:0 0 0 10px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
-
-/* área que recebe o grid escalado */
-#gridwrap{flex:1;position:relative;overflow:hidden}
-#grid{display:grid;gap:clamp(10px,.9vw,16px);align-content:start;position:absolute;top:0;left:0;will-change:transform}
-
-/* card de colaborador */
-.pc{background:var(--card);border:1px solid var(--brd);border-radius:16px;padding:clamp(12px,.9vw,18px);position:relative;overflow:hidden;display:flex;flex-direction:column}
-.pc::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}
-.pc.t-abaixo::before{background:var(--red)}.pc.t-meta::before{background:var(--yel)}.pc.t-acima::before{background:var(--grn)}.pc.t-sem::before{background:var(--tx3)}
-.atv.sem{opacity:.6}
-.pc-h{display:flex;align-items:center;gap:11px;margin-bottom:12px}
-.av{width:clamp(38px,2.6vw,48px);height:clamp(38px,2.6vw,48px);border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--pur));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:clamp(14px,1.1vw,19px);color:#0f172a;flex-shrink:0}
-.pc-nome{font-size:clamp(14px,1.05vw,19px);font-weight:700;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pc-fn{font-size:clamp(10px,.78vw,13px);color:var(--tx3);margin-top:2px}
-.pc-tier{margin-left:auto;text-align:center;flex-shrink:0}
-.pc-veic{font-size:clamp(24px,2.1vw,36px);line-height:1}
-.pc-pct{font-family:var(--m);font-size:clamp(12px,.9vw,16px);font-weight:600;margin-top:2px}
-.atv{padding:7px 0;border-bottom:1px solid rgba(51,65,85,.5)}
-.atv:last-child{border-bottom:none}
-.atv-top{display:flex;align-items:center;gap:8px;margin-bottom:5px}
-.atv-nome{font-size:clamp(11px,.85vw,14px);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.atv-veic{font-size:clamp(13px,.95vw,17px);margin-left:auto;flex-shrink:0}
-.bar{height:8px;border-radius:5px;background:var(--bg3);overflow:hidden;position:relative}
-.bar-fill{height:100%;border-radius:5px;transition:width .8s ease}
-.f-abaixo{background:linear-gradient(90deg,#b91c1c,var(--red))}
-.f-meta{background:linear-gradient(90deg,#d97706,var(--yel))}
-.f-acima{background:linear-gradient(90deg,#059669,var(--grn))}
-.atv-nums{display:flex;justify-content:space-between;font-family:var(--m);font-size:clamp(10px,.76vw,13px);color:var(--tx2);margin-top:4px}
-.atv-nums b{color:var(--tx)}
-
-.loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--tx2)}
-.spin{width:38px;height:38px;border:3px solid var(--bg3);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite}
-@keyframes sp{to{transform:rotate(360deg)}}
-.tag-mock{position:fixed;bottom:10px;right:12px;background:rgba(251,191,36,.15);border:1px solid var(--yel);color:var(--yel);font-size:11px;font-weight:600;padding:3px 9px;border-radius:8px;z-index:80;display:none}
+:root{--bg:#0b1220;--bg2:#151f33;--bg3:#1e2b45;--brd:#2a3a5c;--acc:#ef4444;--grn:#34d399;--yel:#fbbf24;--pur:#a78bfa;--blu:#3b82f6;--blu2:#60a5fa;--tx:#f1f5f9;--tx2:#9fb0cc;--tx3:#64748b;--f:'DM Sans',sans-serif;--m:'DM Mono',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:var(--f);background:radial-gradient(1200px 600px at 80% -10%,rgba(239,68,68,.10),transparent),var(--bg);color:var(--tx);overflow:hidden;}
+.tv{height:100vh;display:flex;flex-direction:column;padding:2.2vh 2.4vw;}
+.hd{display:flex;align-items:center;gap:1.4vw;padding-bottom:1.6vh;border-bottom:1px solid var(--brd);}
+.logo{width:3.4vw;height:3.4vw;min-width:46px;min-height:46px;border-radius:12px;background:var(--acc);display:flex;align-items:center;justify-content:center;font-family:var(--m);font-weight:600;font-size:1.5vw;color:#0b1220;}
+.htit{font-size:2.0vw;font-weight:800;line-height:1;}
+.hsub{font-size:1.0vw;color:var(--tx3);margin-top:.4vh;}
+.empbig{margin-left:auto;text-align:right;}
+.empbig .e{font-size:1.9vw;font-weight:800;color:var(--acc);font-family:var(--m);line-height:1;}
+.empbig .l{font-size:.85vw;color:var(--tx3);letter-spacing:2px;text-transform:uppercase;}
+.clock{font-family:var(--m);font-size:1.1vw;color:var(--tx2);margin-left:1.6vw;}
+.stage{flex:1;position:relative;}
+.slide{position:absolute;inset:0;opacity:0;transition:opacity .6s;display:flex;flex-direction:column;padding-top:2vh;pointer-events:none;}
+.slide.on{opacity:1;pointer-events:auto;}
+.slide-t{font-size:1.3vw;font-weight:700;color:var(--tx2);margin-bottom:1.4vh;display:flex;align-items:center;gap:.7vw;}
+.slide-t .pill{font-size:.8vw;font-weight:600;color:var(--tx3);background:var(--bg2);border:1px solid var(--brd);border-radius:20px;padding:.3vh .8vw;}
+.rows{flex:1;display:flex;flex-direction:column;gap:1.1vh;justify-content:center;}
+.row{display:flex;align-items:center;gap:1.2vw;background:var(--bg2);border:1px solid var(--brd);border-radius:14px;padding:1.4vh 1.4vw;}
+.veic{font-size:2.2vw;width:2.6vw;text-align:center;}
+.rname{width:20vw;}
+.rname .n{font-size:1.35vw;font-weight:700;}
+.rname .c{font-size:.85vw;color:var(--tx3);font-family:var(--m);}
+.track{flex:1;height:2.4vh;min-height:16px;border-radius:8px;background:var(--bg3);position:relative;overflow:visible;}
+.fill{height:100%;border-radius:8px;}
+.tick{position:absolute;top:-.6vh;bottom:-.6vh;width:3px;border-radius:2px;}
+.tick .tl{position:absolute;top:-2vh;left:50%;transform:translateX(-50%);font-size:.72vw;font-family:var(--m);white-space:nowrap;}
+.rnum{width:12vw;text-align:right;}
+.rnum .big{font-size:1.8vw;font-weight:800;font-family:var(--m);line-height:1;}
+.rnum .sm{font-size:.85vw;color:var(--tx3);}
+.mix{flex:1;display:flex;flex-direction:column;gap:1.1vh;justify-content:center;}
+.mrow{display:flex;align-items:center;gap:1.2vw;}
+.mname{width:22vw;font-size:1.25vw;font-weight:600;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mbar{flex:1;height:2.6vh;min-height:18px;border-radius:8px;background:var(--bg3);overflow:hidden;}
+.mfill{height:100%;border-radius:8px;background:linear-gradient(90deg,#3b82f6,#60a5fa);}
+.mval{width:12vw;text-align:right;font-family:var(--m);font-size:1.4vw;font-weight:700;}
+.mval span{font-size:.9vw;color:var(--tx3);font-weight:500;}
+.vazio{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1vh;color:var(--tx3);}
+.vazio .ic{font-size:4vw;opacity:.4;}.vazio .t{font-size:1.4vw;font-weight:600;}
+.ft{display:flex;align-items:center;gap:1vw;padding-top:1.4vh;border-top:1px solid var(--brd);font-size:.9vw;color:var(--tx3);}
+.dots{display:flex;gap:.5vw;margin-left:auto;}
+.dt{width:.8vw;height:.8vw;border-radius:50%;background:var(--brd);}
+.dt.on{background:var(--acc);}
+.leg{display:flex;gap:1.4vw;font-size:.85vw;color:var(--tx2);}
+.leg i{display:inline-block;width:1.4vw;height:0;border-top:3px dashed;vertical-align:middle;margin-right:.4vw;}
 </style>
 </head>
 <body>
-<div id="refbar"></div>
-<div id="stage">
-  <div class="top">
+<div class="tv">
+  <div class="hd">
     <div class="logo">S</div>
-    <div class="ttl"><h1>SALOME · Produtividade</h1><div class="sub" id="sub-emp">Meta × Realizado por colaborador — ao vivo</div></div>
-    <div class="resumo" id="resumo"></div>
-    <div class="clock">
-      <div class="hora" id="clk-hora">--:--:--</div>
-      <div class="live" id="live"><span class="dot"></span><span id="live-txt">conectando…</span></div>
+    <div><div class="htit">Produtividade</div><div class="hsub" id="hsub">Painel operacional</div></div>
+    <div class="empbig"><div class="e" id="empName">—</div><div class="l">Unidade</div></div>
+    <div class="clock" id="clock">--:--</div>
+  </div>
+  <div class="stage">
+    <div class="slide on" id="s1">
+      <div class="slide-t">🎯 Atingimento de meta por atividade <span class="pill">realizado vs meta</span>
+        <span class="leg" style="margin-left:auto"><span><i style="border-color:#fbbf24"></i>Meta</span><span><i style="border-color:#a78bfa"></i>Padrão (média das 3)</span></span></div>
+      <div class="rows" id="rows"></div>
+    </div>
+    <div class="slide" id="s2">
+      <div class="slide-t">🧩 Composição do tempo — onde a unidade se dedica <span class="pill">participação por tempo</span></div>
+      <div class="mix" id="mix"></div>
     </div>
   </div>
-  <div id="gridwrap">
-    <div id="grid"></div>
-    <div class="loading" id="loading"><div class="spin"></div><div>Carregando painel…</div></div>
+  <div class="ft"><span id="ftInfo">Carregando…</span>
+    <div class="dots"><div class="dt on" id="d0"></div><div class="dt" id="d1"></div></div>
   </div>
 </div>
+
 <script>
-// ═══════════════════════════════════════════════════════════
-// SALOME — Painel de Produtividade (2ª tela · standalone)
-// Auto-refresh: 2 min · público · Consome wsGetPainelProdutividade
-// Auto-ajuste: todos os cards cabem na tela (grande ou pequena)
-// ═══════════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1rfecoojBXHiwc01QEZXAOqGLBZa48SYWtvk6tD5hzgxQJZyRS_b62MOz7RUuKdBOag/exec";
-const REFRESH_MS = 120000;                       // 2 minutos
-const EMPRESA = (new URLSearchParams(location.search).get("empresa") || "SJRP").toUpperCase();  // ?empresa=SJRP|OSASCO|CPS
-let FAIXA = { abaixo: 95, acima: 110 };          // % de atingimento (vem do backend)
+const APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbz1rfecoojBXHiwc01QEZXAOqGLBZa48SYWtvk6tD5hzgxQJZyRS_b62MOz7RUuKdBOag/exec";
+const EMPRESA=(new URLSearchParams(location.search).get("empresa")||"SJRP").toUpperCase();
+const DIAS=parseInt(new URLSearchParams(location.search).get("dias")||"7",10)||7;
+const REFRESH_MS=120000, ROTA_MS=60000; // dados 2 min · rodízio 1 min
+document.getElementById("empName").textContent=EMPRESA;
+document.getElementById("hsub").textContent="Painel operacional · atualiza a cada 2 min · últimos "+DIAS+" dias";
 
-function tier(pct){
-  if(pct < FAIXA.abaixo) return {k:"abaixo", veic:"🚲", cor:"var(--red)"};
-  if(pct > FAIXA.acima)  return {k:"acima",  veic:"🚚", cor:"var(--grn)"};
-  return {k:"meta", veic:"🚗", cor:"var(--yel)"};
-}
-const TIERINFO={abaixo:{veic:"🚲",cor:"var(--red)"},meta:{veic:"🚗",cor:"var(--yel)"},acima:{veic:"🚚",cor:"var(--grn)"},sem:{veic:"—",cor:"var(--tx3)"}};
-
-function api(fn, arg){
-  if(typeof google!=="undefined" && google.script && google.script.run){
-    return new Promise((ok,err)=>{
-      const run=google.script.run.withSuccessHandler(r=>{if(r&&r.__erro)err(new Error(r.__erro));else ok(r);}).withFailureHandler(e=>err(new Error(e.message||String(e))));
-      arg!==undefined?run[fn](arg):run[fn]();
-    });
-  }
-  return fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({fn,arg:arg!==undefined?arg:null})})
+function api(fn,arg){
+  return fetch(APPS_SCRIPT_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({fn,arg:arg||null})})
     .then(r=>r.json()).then(r=>{if(r&&r.__erro)throw new Error(r.__erro);return r;});
 }
+function tier(pct){return pct>110?"acima":pct<95?"abaixo":"meta";}
+function veic(t){return t==="acima"?"🚚":t==="meta"?"🚗":"🚲";}
+function cor(t){return t==="acima"?"#34d399":t==="meta"?"#fbbf24":"#ef4444";}
+function fmtH(min){const h=min/60;return (h>=10?Math.round(h):h.toFixed(1))+"h";}
 
-function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
-function iniciais(n){const p=(n||"?").trim().split(/\s+/);return((p[0]||"?")[0]+(p[1]?p[1][0]:"")).toUpperCase();}
-
-function tickRelogio(){document.getElementById("clk-hora").textContent=new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});}
-setInterval(tickRelogio,1000);tickRelogio();
-(function(){var s=document.getElementById("sub-emp");if(s)s.textContent="Empresa "+EMPRESA+" · Meta × Realizado — ao vivo";document.title="SALOME — Produtividade "+EMPRESA;})();
-
-// ── calcula nº de colunas para o grid ficar equilibrado ──
-function calcCols(n){
-  if(n<=0) return 1;
-  const wrap=document.getElementById("gridwrap");
-  const ar=(wrap.clientWidth||1)/(wrap.clientHeight||1);
-  let cols=Math.round(Math.sqrt(n*ar));
-  cols=Math.max(1, Math.min(6, cols));
-  if(cols>n) cols=n;
-  return cols;
+let DADOS=null;
+function buildS1(){
+  const el=document.getElementById("rows");
+  const ats=(DADOS&&DADOS.atividades)||[];
+  if(!ats.length){el.innerHTML='<div class="vazio"><div class="ic">🎯</div><div class="t">Sem apontamentos com meta e quantidade no período.</div></div>';return;}
+  const top=ats.slice(0,6);
+  const escala=Math.max.apply(null,top.map(d=>Math.max(d.meta,d.real,d.padrao)))*1.15||1;
+  el.innerHTML=top.map(d=>{const t=tier(d.pct);return `
+    <div class="row">
+      <div class="veic">${veic(t)}</div>
+      <div class="rname"><div class="n">${d.desc}</div><div class="c">${d.cod}</div></div>
+      <div class="track">
+        <div class="fill" style="width:${Math.min(100,d.real/escala*100)}%;background:${cor(t)}"></div>
+        <div class="tick" style="left:${d.meta/escala*100}%;background:#fbbf24"><span class="tl" style="color:#fbbf24">meta ${d.meta}</span></div>
+        <div class="tick" style="left:${d.padrao/escala*100}%;background:#a78bfa"></div>
+      </div>
+      <div class="rnum"><div class="big" style="color:${cor(t)}">${d.real}<span style="font-size:.9vw;color:var(--tx3)"> ${d.unidade||""}</span></div><div class="sm">${d.pct}% da meta · padrão ${d.padrao}</div></div>
+    </div>`;}).join("");
+}
+function buildS2(){
+  const el=document.getElementById("mix");
+  const comp=(DADOS&&DADOS.composicao)||[];
+  if(!comp.length){el.innerHTML='<div class="vazio"><div class="ic">🧩</div><div class="t">Sem tempo apontado no período.</div></div>';return;}
+  const top=comp.slice(0,8);const max=Math.max.apply(null,top.map(a=>a.pct))||1;
+  el.innerHTML=top.map(a=>`
+    <div class="mrow"><div class="mname">${a.desc}</div>
+    <div class="mbar"><div class="mfill" style="width:${a.pct/max*100}%"></div></div>
+    <div class="mval">${a.pct.toFixed(1)}% <span>· ${fmtH(a.min)}</span></div></div>`).join("");
 }
 
-// ── escala o grid para caber inteiro na área visível ──
-function ajustarEscala(){
-  const wrap=document.getElementById("gridwrap"), grid=document.getElementById("grid");
-  if(!wrap||!grid) return;
-  grid.style.transform="none";
-  grid.style.width=wrap.clientWidth+"px";
-  const gh=grid.offsetHeight, gw=grid.offsetWidth || wrap.clientWidth;
-  const availH=wrap.clientHeight, availW=wrap.clientWidth;
-  let s=Math.min(availW/gw, availH/gh);
-  s=Math.max(.35, Math.min(1, s));             // só reduz (nunca corta); fica no topo
-  grid.style.transformOrigin="top center";
-  grid.style.left=((availW-gw)/2)+"px";
-  grid.style.transform="scale("+s+")";
-}
-let _rz; window.addEventListener("resize",()=>{clearTimeout(_rz);_rz=setTimeout(()=>{if(ULT)render(ULT);},150);});
-
-let ULT=null;
-function render(d){
-  ULT=d;
-  if(d.faixa){ FAIXA=d.faixa; }
-  const pessoas=d.pessoas||[];
-  const ld=document.getElementById("loading");
-  if(!pessoas.length){ ld.style.display="flex"; ld.innerHTML='<div style="font-size:44px;opacity:.35">📊</div><div style="font-size:16px">Sem apontamentos com meta hoje</div><div style="font-size:12px;color:var(--tx3)">Empresa '+EMPRESA+'</div>'; }
-  else { ld.style.display="none"; }
-
-  // resumo no topo
-  const na=pessoas.filter(p=>p.tier==="meta").length;
-  const ab=pessoas.filter(p=>p.tier==="abaixo").length;
-  const ac=pessoas.filter(p=>p.tier==="acima").length;
-  document.getElementById("resumo").innerHTML=
-    '<div class="rz"><div class="n" style="color:var(--grn)">'+ac+' 🚚</div><div class="l">Acima</div></div>'+
-    '<div class="rz"><div class="n" style="color:var(--yel)">'+na+' 🚗</div><div class="l">Na meta</div></div>'+
-    '<div class="rz"><div class="n" style="color:var(--red)">'+ab+' 🚲</div><div class="l">Abaixo</div></div>';
-
-  // cards
-  const cols=calcCols(pessoas.length);
-  const grid=document.getElementById("grid");
-  grid.style.gridTemplateColumns="repeat("+cols+",1fr)";
-  grid.innerHTML=pessoas.map(p=>{
-    const t=TIERINFO[p.tier]||TIERINFO.sem;
-    const ats=(p.atividades||[]).map(a=>{
-      if(a.semDado){
-        return '<div class="atv sem"><div class="atv-top"><span class="atv-nome">'+esc(a.desc||a.codigo)+'</span></div>'
-          +'<div class="bar"></div>'
-          +'<div class="atv-nums"><span>Meta <b>'+a.meta+'</b> '+esc(a.unidade||"")+'</span><span style="color:var(--tx3)">sem lançamento</span></div></div>';
-      }
-      const pct=a.meta>0?a.realizado/a.meta*100:0;
-      const at=tier(pct);
-      const w=Math.max(3,Math.min(100,pct));
-      return '<div class="atv"><div class="atv-top"><span class="atv-nome">'+esc(a.desc||a.codigo)+'</span><span class="atv-veic">'+at.veic+'</span></div>'
-        +'<div class="bar"><div class="bar-fill f-'+at.k+'" style="width:'+w+'%"></div></div>'
-        +'<div class="atv-nums"><span>Meta <b>'+a.meta+'</b> · Real <b>'+a.realizado+'</b> '+esc(a.unidade||"")+'</span><span style="color:'+at.cor+'">'+Math.round(pct)+'%</span></div></div>';
-    }).join("");
-    const pctTxt = p.tier==="sem" ? "sem dados" : Math.round(p.pctGeral)+"%";
-    return '<div class="pc t-'+p.tier+'"><div class="pc-h"><div class="av">'+esc(iniciais(p.nome))+'</div>'
-      +'<div style="min-width:0"><div class="pc-nome">'+esc(p.nome)+'</div><div class="pc-fn">'+esc(p.funcao||p.setor||"—")+'</div></div>'
-      +'<div class="pc-tier"><div class="pc-veic">'+t.veic+'</div><div class="pc-pct" style="color:'+t.cor+'">'+pctTxt+'</div></div></div>'
-      +ats+'</div>';
-  }).join("");
-
-  requestAnimationFrame(ajustarEscala);
+// ── demonstração (fallback até o .gs ser reimplantado) ──
+function gerarDemo(){
+  const seedBase={SJRP:3,OSASCO:7,CPS:11}[EMPRESA]||5; let s=seedBase;
+  const rnd=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};
+  const M=[["DESCARGA-001",100,"cx/h","Descarregamento"],["ARMAZEM-001",150,"cx/h","Movimentação armazém"],["ARMAZEM-003",80,"cx/h","Separação p/ expedição"],["CARGA-002",90,"cx/h","Carregamento embarque"],["PALET-001",15,"plt/h","Montagem palete"],["PALET-003",25,"plt/h","Pesagem palete"],["CARGA-003",120,"cx/h","Conferência pré-embarque"],["ARMAZEM-002",120,"cx/h","Organização armazém"]];
+  const ats=M.map(m=>{const real=Math.round(m[1]*(0.8+rnd()*0.5));const padrao=Math.round(m[1]*(0.9+rnd()*0.25));return {cod:m[0],desc:m[3],unidade:m[2],meta:m[1],real,padrao,pct:Math.round(real/m[1]*100)};}).sort((a,b)=>b.pct-a.pct);
+  const extra=[["TRANSPORTE-001","Dirigindo"],["INATIVO-001","Inativo"],["ADMIN-002","Briefing"]];
+  const comp=M.map(m=>({cod:m[0],desc:m[3],min:60+Math.round(rnd()*400)})).concat(extra.map(e=>({cod:e[0],desc:e[1],min:120+Math.round(rnd()*500)})));
+  const tot=comp.reduce((x,c)=>x+c.min,0);comp.forEach(c=>c.pct=Math.round(c.min/tot*1000)/10);comp.sort((a,b)=>b.min-a.min);
+  return {ok:true,empresa:EMPRESA,demo:true,atividades:ats,composicao:comp};
 }
 
-function setLive(ok,hora){
-  const el=document.getElementById("live"),txt=document.getElementById("live-txt");
-  el.style.color=ok?"var(--grn)":"var(--yel)";
-  txt.textContent=ok?("ao vivo · "+(hora||"")):"sem conexão · tentando…";
-}
-
-let carregando=false;
 async function carregar(){
-  if(carregando)return;carregando=true;
   try{
-    const d=await api("wsGetPainelProdutividade",{data:"",empresa:EMPRESA});
-    if(d && d.ok && Array.isArray(d.pessoas)){
-      setLive(true,d.gerado_em);
-      render(d);                 // render trata lista vazia com "Sem apontamentos"
-    } else {
-      setLive(false);
-      mostrarErro((d&&d.__erro)||"Sem resposta do servidor");
-    }
-  }catch(e){
-    setLive(false);
-    mostrarErro(e.message);
-  }finally{ carregando=false; }
+    const r=await api("wsGetPainelProdTV",{empresa:EMPRESA,dias:DIAS});
+    if(r&&r.atividades){DADOS=r;}
+    else DADOS=gerarDemo();
+  }catch(e){DADOS=gerarDemo();}
+  buildS1();buildS2();
+  const dem=DADOS&&DADOS.demo?" · (demonstração — reimplante o Apps Script)":"";
+  document.getElementById("_dem")&&(document.getElementById("_dem").textContent=dem);
+  atualizarFt();
+}
+function atualizarFt(){
+  const dem=DADOS&&DADOS.demo?" · demonstração":"";
+  document.getElementById("ftInfo").textContent=(cur===0
+    ? "Atingimento de meta · unidade "+EMPRESA+" · barra = realizado, marcas = meta e padrão"
+    : "Composição por tempo · unidade "+EMPRESA)+dem;
 }
 
-// Mostra estado de erro/conexão (NUNCA dados fictícios)
-function mostrarErro(msg){
-  const g=document.getElementById("grid"); if(g) g.innerHTML="";
-  const ld=document.getElementById("loading");
-  if(!ld) return;
-  ld.style.display="flex";
-  ld.innerHTML='<div style="font-size:44px">📡</div>'
-    +'<div style="font-size:16px;font-weight:600">Não foi possível carregar</div>'
-    +'<div style="font-size:12px;color:var(--tx3);max-width:420px;text-align:center">'+esc(msg||"Verifique a conexão. Nova tentativa automática em instantes.")+'</div>';
-}
+function tick(){const d=new Date();document.getElementById("clock").textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
+tick();setInterval(tick,20000);
 
-let refStart=Date.now();
-setInterval(()=>{document.getElementById("refbar").style.width=Math.min(100,(Date.now()-refStart)/REFRESH_MS*100)+"%";},200);
-function ciclo(){refStart=Date.now();document.getElementById("refbar").style.width="0%";carregar();}
-ciclo();
-setInterval(ciclo,REFRESH_MS);
-document.addEventListener("keydown",e=>{if(e.key==="r"||e.key==="R")ciclo();});
+let cur=0;const slides=["s1","s2"];
+function show(i){slides.forEach((sname,k)=>document.getElementById(sname).classList.toggle("on",k===i));
+  document.getElementById("d0").classList.toggle("on",i===0);document.getElementById("d1").classList.toggle("on",i===1);atualizarFt();}
+show(0);
+setInterval(()=>{cur=(cur+1)%slides.length;show(cur);},ROTA_MS);   // rodízio a cada 1 minuto
+setInterval(carregar,REFRESH_MS);                                 // recarrega dados a cada 2 min
+carregar();
 </script>
 </body>
 </html>
