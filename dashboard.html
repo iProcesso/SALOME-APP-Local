@@ -7,7 +7,35 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#273449;--card:#1e293b;--brd:#334155;--acc:#ef4444;--grn:#34d399;--yel:#fbbf24;--red:#f87171;--pur:#a78bfa;--tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;--f:'DM Sans',sans-serif;--m:'DM Mono',monospace;}
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#273449;--card:#1e293b;--brd:#334155;--acc:#ef4444;--grn:#34d399;--yel:#fbbf24;--red:#f87171;--pur:#a78bfa;--blu:#3b82f6;--blu2:#60a5fa;--tx:#f1f5f9;--tx2:#94a3b8;--tx3:#64748b;--f:'DM Sans',sans-serif;--m:'DM Mono',monospace;}
+/* Por atividade (v55.03) */
+.pa-top{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;}
+.pa-fg{display:flex;flex-direction:column;gap:4px;}
+.pa-fl{font-size:10px;font-weight:600;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;}
+.pa-badge{display:inline-flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:8px 13px;font-size:13px;align-self:flex-end;}
+.pa-badge b{font-family:var(--m);color:var(--acc);}
+.pa-ring-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+@media(max-width:820px){.pa-ring-grid{grid-template-columns:1fr;}}
+.pa-ringcard{background:var(--bg2);border:1px solid var(--brd);border-radius:12px;padding:16px;text-align:center;}
+.pa-ring{position:relative;width:120px;height:120px;margin:6px auto 8px;}
+.pa-ring svg{transform:rotate(-90deg);}
+.pa-ring-c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.pa-ring-pct{font-size:26px;font-weight:700;font-family:var(--m);}
+.pa-ring-abs{font-size:11px;color:var(--tx3);margin-top:1px;}
+.pa-ring-lbl{font-size:12px;font-weight:600;}.pa-ring-lbl2{font-size:11px;color:var(--tx3);margin-top:2px;}
+.pa-seg{display:inline-flex;background:var(--bg2);border:1px solid var(--brd);border-radius:9px;padding:3px;gap:3px;margin-bottom:14px;}
+.pa-seg button{border:none;background:none;color:var(--tx2);font-family:var(--f);font-size:12px;font-weight:600;padding:6px 12px;border-radius:7px;cursor:pointer;}
+.pa-seg button.on{background:var(--bg3);color:var(--tx);}
+.pa-mixrow{display:flex;align-items:center;gap:12px;padding:7px 0;}
+.pa-mixrow.hl .pa-mixname{color:var(--blu2);font-weight:700;}
+.pa-mixname{width:230px;font-size:12.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;}
+.pa-mixbar{flex:1;height:16px;border-radius:5px;background:var(--bg3);overflow:hidden;}
+.pa-mixfill{height:100%;border-radius:5px;}
+.pa-mixval{width:150px;text-align:right;font-family:var(--m);font-size:12px;color:var(--tx);flex-shrink:0;}
+.pa-mixval span{color:var(--tx3);}
+.pa-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--tx2);}
+.pa-lg{display:flex;align-items:center;gap:5px;}.pa-dot{width:10px;height:10px;border-radius:3px;}
+.pa-lref{width:16px;height:0;border-top:2px dashed;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;-webkit-font-smoothing:antialiased;}
 .layout{display:flex;height:100vh;overflow:hidden;}
@@ -107,7 +135,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
   <aside class="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-ico">S</div>
-      <div><div class="sb-logo-txt">SALOME</div><div class="sb-logo-sub">Dashboard · v55.01</div></div>
+      <div><div class="sb-logo-txt">SALOME</div><div class="sb-logo-sub">Dashboard · v55.03</div></div>
     </div>
     <nav class="sb-nav">
       <div class="sb-section">Visualização</div>
@@ -119,6 +147,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
       <div class="sb-section">Produtividade</div>
       <button class="sb-item" onclick="setTab('produtividade')"><span class="sb-item-ic">🎯</span>Meta × Realizado</button>
       <button class="sb-item" onclick="setTab('empresas')"><span class="sb-item-ic">🏢</span>Empresas & Consolidado</button>
+      <button class="sb-item" onclick="setTab('poratividade')"><span class="sb-item-ic">🔍</span>Por atividade</button>
       <div class="sb-sep"></div>
       <div class="sb-section">Exportar</div>
       <button class="sb-item" onclick="exportCSV()"><span class="sb-item-ic">⬇</span>Exportar CSV</button>
@@ -172,6 +201,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
         <button class="tab-btn" id="tab-resumo" onclick="setTab('resumo')">📈 Por pessoa</button>
         <button class="tab-btn" id="tab-produtividade" onclick="setTab('produtividade')">🎯 Produtividade</button>
         <button class="tab-btn" id="tab-empresas" onclick="setTab('empresas')">🏢 Empresas</button>
+        <button class="tab-btn" id="tab-poratividade" onclick="setTab('poratividade')">🔍 Por atividade</button>
       </div>
       <div id="view-timeline"><div class="chart-card"><div class="chart-title">Linha do tempo por pessoa</div><div class="chart-sub">Cada bloco representa um apontamento. Passe o mouse para ver detalhes.</div><div id="timeline-container"><div class="loading-state"><div class="spin"></div><div style="font-size:13px;color:var(--tx3)">Carregando...</div></div></div></div></div>
       <div id="view-graficos" style="display:none">
@@ -235,6 +265,35 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
             <th>Semáforo</th>
           </tr></thead><tbody id="cons-tbl-body"></tbody></table></div>
           <div style="padding:10px 18px;font-size:11px;color:var(--tx3);border-top:1px solid var(--brd)" id="cons-count"></div>
+        </div>
+      </div>
+
+      <div id="view-poratividade" style="display:none">
+        <div class="pa-top">
+          <div class="pa-fg"><span class="pa-fl">Atividade</span><select class="fi" id="pa-ativ" onchange="renderPorAtiv()" style="min-width:240px"></select></div>
+          <div class="pa-fg"><span class="pa-fl">Profissional (p/ participação)</span><select class="fi" id="pa-pessoa" onchange="renderPorAtiv()" style="min-width:200px"></select></div>
+          <div class="pa-badge" id="pa-metaBadge">—</div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card"><div class="chart-title" id="pa-pessTit">🏆 Profissionais nesta atividade</div><div class="chart-sub">Barra = realizado. Linhas: <b style="color:var(--yel)">meta</b> e <b style="color:var(--pur)">padrão (média das 3 empresas)</b>. Use o filtro de <b>Empresa</b> no topo para comparar só os profissionais dela.</div><div class="chart-wrap tall"><canvas id="pa-chPess"></canvas></div>
+            <div class="pa-legend"><div class="pa-lg"><span class="pa-dot" style="background:#f87171"></span>SJRP</div><div class="pa-lg"><span class="pa-dot" style="background:#a78bfa"></span>OSASCO</div><div class="pa-lg"><span class="pa-dot" style="background:#34d399"></span>CPS</div><div class="pa-lg"><span class="pa-lref" style="border-color:var(--yel)"></span>Meta</div><div class="pa-lg"><span class="pa-lref" style="border-color:var(--pur)"></span>Padrão</div></div>
+          </div>
+          <div class="chart-card"><div class="chart-title">🏢 Empresas nesta atividade</div><div class="chart-sub">Realizado médio por unidade vs meta e padrão.</div><div class="chart-wrap"><canvas id="pa-chEmp"></canvas></div><div id="pa-empResumo" style="margin-top:10px;font-size:12px;color:var(--tx2)"></div></div>
+        </div>
+        <div class="chart-card" style="margin-bottom:16px">
+          <div class="chart-title">📊 Participação desta atividade (por tempo)</div>
+          <div class="chart-sub">Quanto esta atividade representa do tempo total — no recorte do profissional, da empresa e do geral.</div>
+          <div class="pa-ring-grid" id="pa-partGrid"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">🧩 Composição — peso de cada atividade no total</div>
+          <div class="chart-sub">Participação de todas as atividades no tempo total do recorte (a atividade selecionada fica destacada).</div>
+          <div class="pa-seg" id="pa-mixToggle">
+            <button class="on" data-s="geral" onclick="paSetMix('geral')">Geral</button>
+            <button data-s="empresa" onclick="paSetMix('empresa')">Empresa</button>
+            <button data-s="pessoa" onclick="paSetMix('pessoa')">Profissional</button>
+          </div>
+          <div id="pa-mixList"></div>
         </div>
       </div>
     </div>
@@ -434,7 +493,7 @@ function atuKPIs(){
 let tabAtual="timeline";
 function setTab(tab){
   tabAtual=tab;
-  ["timeline","graficos","tabela","resumo","produtividade","empresas"].forEach(t=>{
+  ["timeline","graficos","tabela","resumo","produtividade","empresas","poratividade"].forEach(t=>{
     const v=document.getElementById("view-"+t);if(v)v.style.display=t===tab?"block":"none";
     const tb=document.getElementById("tab-"+t);if(tb)tb.classList.toggle("on",t===tab);
     const sb=document.querySelector(`.sb-item[onclick*="'${t}'"]`);if(sb)sb.classList.toggle("on",t===tab);
@@ -448,6 +507,7 @@ function renderTabAtual(){
   else if(tabAtual==="resumo")renderResumo();
   else if(tabAtual==="produtividade")renderProd();
   else if(tabAtual==="empresas")renderEmpresas();
+  else if(tabAtual==="poratividade")renderPorAtiv();
 }
 
 function renderTL(){
@@ -580,8 +640,17 @@ function exportJSON(){
 
 function toast(msg,tipo){const el=document.getElementById("toast");el.textContent=msg;el.className="toast on"+(tipo?" "+tipo:"");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),2800);}
 
-// ══════════ PRODUTIVIDADE / EMPRESAS (v55.01) ══════════
+// ══════════ PRODUTIVIDADE / EMPRESAS (v55.02) ══════════
 function _minRow(d){if(typeof d.minutos==="number"&&d.minutos>0)return d.minutos;return calcMin([d]);}
+
+// Plugin inline: escreve "realizado / meta" na ponta de cada barra
+const rmPlugin={id:"rm",afterDatasetsDraw(chart){
+  const ds=chart.data.datasets[0];if(!ds||!ds._rm)return;
+  const ctx=chart.ctx,m=chart.getDatasetMeta(0);
+  ctx.save();ctx.font="600 11px 'DM Mono',monospace";ctx.fillStyle="#e5e7eb";ctx.textBaseline="middle";ctx.textAlign="left";
+  m.data.forEach((b,i)=>{const t=ds._rm[i];if(t)ctx.fillText(t,b.x+6,b.y);});
+  ctx.restore();
+}};
 
 function prodAgg(rows){
   // unidades medidas por (empresa|codigo)
@@ -634,7 +703,15 @@ function renderProd(){
   dC("prod-ativ");
   const us=[...A.unidades].sort((a,b)=>b.pct-a.pct).slice(0,14);
   if(us.length){
-    CHARTS["prod-ativ"]=new Chart(document.getElementById("chart-prod-ativ"),{type:"bar",data:{labels:us.map(u=>((u.desc.length>22?u.desc.slice(0,20)+"…":u.desc))+(showEmp?" ["+u.empresa+"]":"")),datasets:[{data:us.map(u=>u.pct),backgroundColor:us.map(u=>semHex(u.tier)),borderRadius:4}]},options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.parsed.x+"% da meta"}}},scales:{x:Object.assign({},CD.scales.x),y:{ticks:{color:"#94a3b8",font:{family:"'DM Sans'",size:11}},grid:{display:false}}}}});
+    const maxPct=Math.max.apply(null,us.map(u=>u.pct));
+    CHARTS["prod-ativ"]=new Chart(document.getElementById("chart-prod-ativ"),{type:"bar",
+      data:{labels:us.map(u=>((u.desc.length>22?u.desc.slice(0,20)+"…":u.desc))+(showEmp?" ["+u.empresa+"]":"")),
+        datasets:[{data:us.map(u=>u.pct),backgroundColor:us.map(u=>semHex(u.tier)),borderRadius:4,
+          _rm:us.map(u=>u.realizado+" / "+u.meta)}]},
+      options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const u=us[c.dataIndex];return "Realizado "+u.realizado+" / meta "+u.meta+(u.unidade?" "+u.unidade:"")+" · "+u.pct+"%";}}}},
+        scales:{x:Object.assign({},CD.scales.x,{suggestedMax:Math.ceil(maxPct*1.22),title:{display:true,text:"realizado / meta  (barra = % da meta)",color:"#64748b",font:{size:10}}}),
+          y:{ticks:{color:"#94a3b8",font:{family:"'DM Sans'",size:11}},grid:{display:false}}}},
+      plugins:[rmPlugin]});
   }
   dC("prod-tend");
   CHARTS["prod-tend"]=new Chart(document.getElementById("chart-prod-tend"),{type:"line",data:{labels:A.tendencia.map(t=>t.day.split("-").slice(1).reverse().join("/")),datasets:[{label:"% atingimento",data:A.tendencia.map(t=>t.pct),borderColor:"#ef4444",backgroundColor:"rgba(239,68,68,.12)",tension:.3,fill:true,pointRadius:3}]},options:Object.assign({},CD,{plugins:{legend:{display:false}},scales:{x:CD.scales.x,y:Object.assign({},CD.scales.y,{suggestedMin:0,suggestedMax:130})}})});
@@ -691,6 +768,84 @@ function renderCons(){
   document.getElementById("cons-count").textContent=`${arr.length} linha(s) · unidade × profissional`;
 }
 function sortCons(col){if(CONS_SORT===col)CONS_DIR*=-1;else{CONS_SORT=col;CONS_DIR=(col==="empresa"||col==="pessoa")?1:-1;}renderCons();}
+
+// ══════════ POR ATIVIDADE (v55.03) ══════════
+function refLinesH(refs){return {id:"refh",afterDatasetsDraw(chart){const xs=chart.scales.x,area=chart.chartArea,ctx=chart.ctx;refs.forEach((r,i)=>{if(r.v==null)return;const x=xs.getPixelForValue(r.v);if(x<area.left-1||x>area.right+1)return;ctx.save();ctx.strokeStyle=r.c;ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(x,area.top);ctx.lineTo(x,area.bottom);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=r.c;ctx.font="600 10px 'DM Mono'";ctx.textAlign="center";ctx.fillText(r.t,x,area.top+(i===0?-3:12));ctx.restore();});}};}
+function refLinesV(refs){return {id:"refv",afterDatasetsDraw(chart){const ys=chart.scales.y,area=chart.chartArea,ctx=chart.ctx;refs.forEach((r,i)=>{if(r.v==null)return;const y=ys.getPixelForValue(r.v);ctx.save();ctx.strokeStyle=r.c;ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(area.left,y);ctx.lineTo(area.right,y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=r.c;ctx.font="600 10px 'DM Mono'";ctx.textAlign=i===0?"left":"right";ctx.fillText(r.t+" "+r.v,i===0?area.left+4:area.right-4,y-4);ctx.restore();});}};}
+let PA_MIX="geral";
+function paSetMix(s){PA_MIX=s;document.querySelectorAll("#pa-mixToggle button").forEach(b=>b.classList.toggle("on",b.dataset.s===s));paRenderMix();}
+function paPopular(){
+  const empSel=document.getElementById("f-empresa").value;
+  const comMeta={};DADOS_RAW.forEach(d=>{if((+d.meta||0)>0)comMeta[d.atividade_codigo]=d.atividade_desc||d.atividade_codigo;});
+  const sA=document.getElementById("pa-ativ"),cur=sA.value,cods=Object.keys(comMeta).sort();
+  sA.innerHTML=cods.map(c=>`<option value="${c}">${c} · ${comMeta[c]}</option>`).join("");
+  if(cur&&comMeta[cur])sA.value=cur;else if(cods.length)sA.value=cods[0];
+  const pes=[...new Set(DADOS_RAW.filter(d=>!empSel||d.empresa===empSel).map(d=>d.pessoa_nome).filter(Boolean))].sort();
+  const sP=document.getElementById("pa-pessoa"),curP=sP.value;
+  sP.innerHTML=pes.map(p=>`<option value="${p}">${p}</option>`).join("");
+  if(curP&&pes.indexOf(curP)>=0)sP.value=curP;else if(pes.length)sP.value=pes[0];
+}
+function renderPorAtiv(){
+  if(!DADOS_RAW.length)return;
+  paPopular();
+  const cod=document.getElementById("pa-ativ").value;
+  const empSel=document.getElementById("f-empresa").value;
+  if(!cod){document.getElementById("pa-metaBadge").textContent="Sem atividades com meta no período.";["pa-chPess","pa-chEmp"].forEach(dC);document.getElementById("pa-partGrid").innerHTML="";document.getElementById("pa-mixList").innerHTML="";return;}
+  const info=DADOS_RAW.find(d=>d.atividade_codigo===cod)||{};
+  const meta=+info.meta||0,uni=info.unidade||"";
+  document.getElementById("pa-metaBadge").innerHTML=`Meta: <b>${meta} ${uni}</b> · métrica ${info.metrica||"—"}`;
+  document.getElementById("pa-pessTit").innerHTML="🏆 Profissionais nesta atividade"+(empSel?` <span style="font-size:11px;color:var(--tx3);font-weight:500">— só ${empSel}</span>`:` <span style="font-size:11px;color:var(--tx3);font-weight:500">— todas as empresas</span>`);
+  const rowsAt=DADOS_RAW.filter(d=>d.atividade_codigo===cod);
+  const porPes={};
+  rowsAt.filter(d=>!empSel||d.empresa===empSel).forEach(d=>{const k=d.pessoa_nome||"?";(porPes[k]=porPes[k]||{nome:k,emp:d.empresa,q:0,m:0});porPes[k].q+=(+d.qtd||0);porPes[k].m+=_minRow(d);});
+  const pess=Object.values(porPes).map(p=>({nome:p.nome,emp:p.emp,real:p.m>0?Math.round(p.q/(p.m/60)):0})).filter(p=>p.real>0).sort((a,b)=>b.real-a.real);
+  const porEmp={};
+  rowsAt.forEach(d=>{const e=d.empresa||"—";(porEmp[e]=porEmp[e]||{q:0,m:0});porEmp[e].q+=(+d.qtd||0);porEmp[e].m+=_minRow(d);});
+  const emps=Object.keys(porEmp).filter(e=>e&&e!=="—").sort().map(e=>({emp:e,real:porEmp[e].m>0?Math.round(porEmp[e].q/(porEmp[e].m/60)):0})).filter(e=>e.real>0);
+  const padrao=emps.length?Math.round(emps.reduce((s,e)=>s+e.real,0)/emps.length):0;
+  dC("pa-chPess");
+  if(pess.length){const mx=Math.max(meta,padrao,...pess.map(p=>p.real))*1.28;
+    CHARTS["pa-chPess"]=new Chart(document.getElementById("pa-chPess"),{type:"bar",
+      data:{labels:pess.map(p=>p.nome),datasets:[{data:pess.map(p=>p.real),backgroundColor:pess.map(p=>EMP_CORES[p.emp]||"#94a3b8"),borderRadius:4,_rm:pess.map(p=>p.real+(meta?" ("+Math.round(p.real/meta*100)+"%)":""))}]},
+      options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const p=pess[c.dataIndex];return p.emp+" · "+p.real+" "+uni+(meta?" · "+Math.round(p.real/meta*100)+"% da meta":"");}}}},scales:{x:Object.assign({},CD.scales.x,{suggestedMax:mx,title:{display:true,text:uni,color:"#64748b",font:{size:10}}}),y:{ticks:{color:"#cbd5e1",font:{family:"'DM Sans'",size:12}},grid:{display:false}}}},
+      plugins:[rmPlugin,refLinesH([{v:meta,c:"#fbbf24",t:"meta "+meta},{v:padrao,c:"#a78bfa",t:"padrão "+padrao}])]});}
+  dC("pa-chEmp");
+  if(emps.length){CHARTS["pa-chEmp"]=new Chart(document.getElementById("pa-chEmp"),{type:"bar",
+      data:{labels:emps.map(e=>e.emp),datasets:[{data:emps.map(e=>e.real),backgroundColor:emps.map(e=>EMP_CORES[e.emp]||"#94a3b8"),borderRadius:6}]},
+      options:{plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>emps[c.dataIndex].real+" "+uni+(meta?" · "+Math.round(emps[c.dataIndex].real/meta*100)+"% da meta":"")}}},scales:{x:{ticks:{color:"#cbd5e1",font:{family:"'DM Sans'",size:12}},grid:{display:false}},y:Object.assign({},CD.scales.y,{suggestedMax:Math.max(meta,padrao,...emps.map(e=>e.real))*1.2})}},
+      plugins:[refLinesV([{v:meta,c:"#fbbf24",t:"meta"},{v:padrao,c:"#a78bfa",t:"padrão"}])]});}
+  const melhor=emps.reduce((a,b)=>a.real>b.real?a:b,{real:0,emp:"—"});
+  document.getElementById("pa-empResumo").innerHTML=`Padrão do grupo: <b style="color:var(--pur)">${padrao} ${uni}</b> · destaque: <b style="color:${EMP_CORES[melhor.emp]||'var(--tx2)'}">${melhor.emp}</b> (${melhor.real} ${uni})`;
+  paRenderPart(cod);paRenderMix();
+}
+function paRenderPart(cod){
+  const pessoa=document.getElementById("pa-pessoa").value;
+  const empP=(DADOS_RAW.find(d=>d.pessoa_nome===pessoa)||{}).empresa||"";
+  const sm=rows=>rows.reduce((s,d)=>s+_minRow(d),0);
+  const cards=[
+    {lbl:pessoa||"—",lbl2:"do tempo do profissional",at:sm(DADOS_RAW.filter(d=>d.atividade_codigo===cod&&d.pessoa_nome===pessoa)),tot:sm(DADOS_RAW.filter(d=>d.pessoa_nome===pessoa)),cor:"#ef4444"},
+    {lbl:empP||"—",lbl2:"do tempo da empresa",at:sm(DADOS_RAW.filter(d=>d.atividade_codigo===cod&&d.empresa===empP)),tot:sm(DADOS_RAW.filter(d=>d.empresa===empP)),cor:EMP_CORES[empP]||"#94a3b8"},
+    {lbl:"Geral (empresas)",lbl2:"do tempo total",at:sm(DADOS_RAW.filter(d=>d.atividade_codigo===cod)),tot:sm(DADOS_RAW),cor:"#94a3b8"}
+  ];
+  document.getElementById("pa-partGrid").innerHTML=cards.map(c=>{const pct=c.tot>0?Math.round(c.at/c.tot*100):0,r=52,circ=2*Math.PI*r,off=circ*(1-pct/100);
+    return `<div class="pa-ringcard"><div class="pa-ring-lbl">${c.lbl}</div><div class="pa-ring-lbl2">${c.lbl2}</div>
+      <div class="pa-ring"><svg width="120" height="120"><circle cx="60" cy="60" r="${r}" fill="none" stroke="#273449" stroke-width="12"/><circle cx="60" cy="60" r="${r}" fill="none" stroke="${c.cor}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}"/></svg>
+      <div class="pa-ring-c"><div class="pa-ring-pct" style="color:${c.cor}">${pct}%</div><div class="pa-ring-abs">${fmtMin(c.at)} de ${fmtMin(c.tot)}</div></div></div></div>`;}).join("");
+}
+function paRenderMix(){
+  const cod=document.getElementById("pa-ativ").value,pessoa=document.getElementById("pa-pessoa").value;
+  const empP=(DADOS_RAW.find(d=>d.pessoa_nome===pessoa)||{}).empresa||"";
+  let rows=DADOS_RAW;
+  if(PA_MIX==="empresa")rows=DADOS_RAW.filter(d=>d.empresa===empP);
+  if(PA_MIX==="pessoa")rows=DADOS_RAW.filter(d=>d.pessoa_nome===pessoa);
+  const porCod={},nome={};let tot=0;
+  rows.forEach(d=>{porCod[d.atividade_codigo]=(porCod[d.atividade_codigo]||0)+_minRow(d);nome[d.atividade_codigo]=d.atividade_desc||d.atividade_codigo;tot+=_minRow(d);});
+  const arr=Object.keys(porCod).map(c=>({c,min:porCod[c],pct:tot>0?porCod[c]/tot*100:0})).sort((a,b)=>b.min-a.min);
+  const max=Math.max(...arr.map(a=>a.pct),1);
+  const esc=PA_MIX==="geral"?"Geral (empresas)":PA_MIX==="empresa"?("Empresa "+empP):("Profissional "+pessoa);
+  document.getElementById("pa-mixList").innerHTML=`<div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Recorte: <b style="color:var(--tx2)">${esc}</b> · total ${fmtMin(tot)}</div>`+
+    arr.map(a=>`<div class="pa-mixrow ${a.c===cod?'hl':''}"><div class="pa-mixname">${a.c===cod?'▶ ':''}${nome[a.c]}</div><div class="pa-mixbar"><div class="pa-mixfill" style="width:${a.pct/max*100}%;background:${a.c===cod?'var(--blu2)':'var(--blu)'};opacity:${a.c===cod?1:.55}"></div></div><div class="pa-mixval">${a.pct.toFixed(1)}% <span>· ${fmtMin(a.min)}</span></div></div>`).join("")||`<div class="empty-state"><div class="empty-ico">🧩</div><div>Sem dados no recorte.</div></div>`;
+}
 
 init();
 </script>
