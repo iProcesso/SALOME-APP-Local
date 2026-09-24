@@ -128,6 +128,28 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
 .prod-row:last-child{border-bottom:none;}
 .prod-rank{width:26px;text-align:center;font-family:var(--m);font-weight:700;color:var(--tx3);flex-shrink:0;}
 .prod-rank.top{color:var(--acc);}
+/* multi-select empresas (v55.04) */
+.ms{position:relative;}
+.ms-btn{background:var(--bg3);border:1px solid var(--brd);border-radius:8px;padding:7px 11px;color:var(--tx);font-family:var(--f);font-size:13px;cursor:pointer;min-width:170px;text-align:left;display:flex;align-items:center;gap:6px;}
+.ms-btn:hover{border-color:var(--acc);}
+.ms-btn .ms-cnt{margin-left:auto;background:var(--acc);color:#0f172a;border-radius:10px;font-size:10px;font-weight:700;padding:1px 6px;font-family:var(--m);}
+.ms-pop{position:absolute;top:calc(100% + 4px);left:0;z-index:40;background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:8px;width:240px;box-shadow:0 12px 30px rgba(0,0,0,.5);display:none;}
+.ms-pop.on{display:block;}
+.ms-search{width:100%;background:var(--bg3);border:1px solid var(--brd);border-radius:7px;padding:6px 9px;color:var(--tx);font-family:var(--f);font-size:12px;outline:none;margin-bottom:6px;}
+.ms-search:focus{border-color:var(--acc);}
+.ms-actions{display:flex;gap:6px;margin-bottom:6px;}
+.ms-actions button{flex:1;background:var(--bg3);border:1px solid var(--brd);border-radius:6px;color:var(--tx2);font-size:11px;font-weight:600;padding:5px;cursor:pointer;font-family:var(--f);}
+.ms-actions button:hover{border-color:var(--acc);color:var(--acc);}
+.ms-list{max-height:180px;overflow-y:auto;}
+.ms-opt{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:6px;cursor:pointer;font-size:13px;}
+.ms-opt:hover{background:var(--bg3);}
+.ms-opt input{width:15px;height:15px;accent-color:var(--acc);cursor:pointer;}
+/* banner demo + overlay carregando (v55.04) */
+.demo-banner{background:rgba(239,68,68,.14);border-bottom:1px solid var(--acc);color:var(--red);font-size:12.5px;font-weight:600;padding:8px 24px;display:none;align-items:center;gap:8px;cursor:pointer;}
+.demo-banner.on{display:flex;}
+.load-ov{position:fixed;inset:0;background:rgba(11,18,32,.72);z-index:120;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.load-ov.on{display:flex;}
+.load-ov .msg{font-size:14px;color:var(--tx2);font-weight:500;}
 </style>
 </head>
 <body>
@@ -135,7 +157,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
   <aside class="sidebar">
     <div class="sb-logo">
       <div class="sb-logo-ico">S</div>
-      <div><div class="sb-logo-txt">SALOME</div><div class="sb-logo-sub">Dashboard · v55.03</div></div>
+      <div><div class="sb-logo-txt">SALOME</div><div class="sb-logo-sub">Dashboard · v55.05</div></div>
     </div>
     <nav class="sb-nav">
       <div class="sb-section">Visualização</div>
@@ -161,6 +183,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
       <button class="tb-btn" onclick="carregarDados()">↻ Atualizar</button>
       <button class="tb-btn primary" onclick="exportCSV()">⬇ Exportar CSV</button>
     </div>
+    <div class="demo-banner" id="demo-banner" onclick="carregarDados()">⚠ Não foi possível carregar os dados do servidor. Nenhum dado exibido. Toque aqui para tentar de novo.</div>
     <div class="filtros">
       <div class="fi-group"><div class="fi-label">De</div><input type="date" class="fi fi-date" id="f-de"></div>
       <div class="fi-group"><div class="fi-label">Até</div><input type="date" class="fi fi-date" id="f-ate"></div>
@@ -171,7 +194,16 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
         <button class="per-b" id="per-mes" onclick="setPeriodo('mes')">Mês</button>
       </div>
       <div class="fi-divider"></div>
-      <div class="fi-group"><div class="fi-label">Empresa</div><select class="fi" id="f-empresa" onchange="aplicarFiltros()"><option value="">Todas</option></select></div>
+      <div class="fi-group"><div class="fi-label">Empresas / unidades</div>
+        <div class="ms" id="ms-emp">
+          <button type="button" class="ms-btn" id="ms-emp-btn" onclick="msToggle(event)">Todas<span class="ms-cnt" id="ms-emp-cnt" style="display:none"></span></button>
+          <div class="ms-pop" id="ms-emp-pop">
+            <input class="ms-search" id="ms-emp-search" placeholder="Buscar unidade..." oninput="msRender()">
+            <div class="ms-actions"><button type="button" onclick="msAll(true)">Todas</button><button type="button" onclick="msAll(false)">Nenhuma</button></div>
+            <div class="ms-list" id="ms-emp-list"></div>
+          </div>
+        </div>
+      </div>
       <div class="fi-group"><div class="fi-label">Pessoa</div><select class="fi" id="f-pessoa"><option value="">Todos</option></select></div>
       <div class="fi-group"><div class="fi-label">Atividade</div><select class="fi" id="f-ativ"><option value="">Todas</option></select></div>
       <div class="fi-group"><div class="fi-label">Grupo</div><select class="fi" id="f-grupo"><option value="">Todos</option></select></div>
@@ -300,6 +332,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--tx);min-height:100vh;
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<div class="load-ov" id="load-ov"><div class="spin"></div><div class="msg" id="load-msg">Buscando dados no servidor…</div></div>
 <div id="tooltip" style="position:fixed;background:var(--bg2);border:1px solid var(--brd);border-radius:9px;padding:10px 13px;font-size:12px;pointer-events:none;opacity:0;transition:opacity .15s;z-index:200;max-width:240px"></div>
 <script>
 const INAT="INATIVO-001";
@@ -307,6 +340,28 @@ const CORES_GRUPOS={"Embarcador":"#ef4444","Transporte":"#dc2626","Descarga e re
 function corAtiv(cod,grupo){return cod===INAT?"#475569":CORES_GRUPOS[grupo]||"#ef4444";}
 let DADOS_RAW=[],DADOS_FILT=[],CHARTS={},SORT_COL="data_inicio",SORT_DIR=1;
 let DASH_TOKEN="";
+// v55.04 — procedência dos dados e multi-seleção de empresas
+let S_ERRO=false;
+let EMP_OPTS=[], EMP_SEL=new Set();
+function mostrarLoading(on,msg){const el=document.getElementById("load-ov");if(!el)return;if(msg)document.getElementById("load-msg").textContent=msg;el.classList.toggle("on",!!on);}
+function empScopeInclui(emp){ if(!EMP_OPTS.length) return true; return EMP_SEL.has(emp); }
+function empEscopoLabel(){ const n=EMP_SEL.size,t=EMP_OPTS.length; if(!t||n===t)return""; if(n===0)return"nenhuma unidade"; if(n===1)return"só "+[...EMP_SEL][0]; return n+" unidades"; }
+function msToggle(ev){ if(ev)ev.stopPropagation(); document.getElementById("ms-emp-pop").classList.toggle("on"); }
+function msAll(v){ EMP_SEL = v ? new Set(EMP_OPTS) : new Set(); msRender(); aplicarFiltros(); }
+function msRender(){
+  const q=(document.getElementById("ms-emp-search").value||"").toLowerCase().trim();
+  const list=document.getElementById("ms-emp-list");
+  list.innerHTML=EMP_OPTS.filter(e=>!q||e.toLowerCase().includes(q)).map(e=>
+    `<label class="ms-opt"><input type="checkbox" ${EMP_SEL.has(e)?"checked":""} onchange="msPick('${e}',this.checked)">${e}</label>`).join("")
+    || '<div style="font-size:12px;color:var(--tx3);padding:6px 7px">Nenhuma unidade</div>';
+  const n=EMP_SEL.size,t=EMP_OPTS.length;
+  const btn=document.getElementById("ms-emp-btn"),cnt=document.getElementById("ms-emp-cnt");
+  let lbl = (!t||n===t)?"Todas" : (n===0?"Nenhuma" : (n===1?[...EMP_SEL][0]:"Unidades"));
+  btn.childNodes[0].nodeValue=lbl;
+  if(t && n!==t && n>0){cnt.style.display="inline";cnt.textContent=n;} else {cnt.style.display="none";}
+}
+function msPick(e,on){ if(on)EMP_SEL.add(e); else EMP_SEL.delete(e); msRender(); aplicarFiltros(); }
+document.addEventListener("click",function(ev){ const ms=document.getElementById("ms-emp"); if(ms && !ms.contains(ev.target)){ const p=document.getElementById("ms-emp-pop"); if(p)p.classList.remove("on"); } });
 
 // ── Produtividade / empresas (v55.01) ─────────────────────
 let FAIXA={abaixo:95,acima:110};
@@ -351,15 +406,18 @@ function api(fn,arg){
       arg!==undefined?run[fn](arg):run[fn]();
     });
   }
-  // GitHub Pages — fetch
+  // GitHub Pages — fetch com timeout generoso (45s: cobre cold start do Apps Script + roteamento por empresa)
+  const ctrl=new AbortController();
+  const tmo=setTimeout(()=>ctrl.abort(),45000);
   return fetch(APPS_SCRIPT_URL,{
     method:"POST",
     headers:{"Content-Type":"text/plain"},
     body:JSON.stringify({fn,arg:arg!==undefined?arg:null}),
-  }).then(r=>r.json()).then(r=>{
+    signal:ctrl.signal,
+  }).then(r=>{clearTimeout(tmo);return r.json();}).then(r=>{
     if(r&&r.__erro)throw new Error(r.__erro);
     return r;
-  });
+  }).catch(e=>{clearTimeout(tmo);throw (e && e.name==="AbortError")?new Error("tempo esgotado ao buscar dados"):e;});
 }
 
 async function init(){
@@ -370,51 +428,20 @@ async function init(){
 }
 
 async function carregarDados(){
+  mostrarLoading(true,"Buscando dados no servidor…");
   try{
     const de=document.getElementById("f-de").value,ate=document.getElementById("f-ate").value;
     const token=getToken();
     const res=await api("wsGetApontamentosMultiEmpresa",{de,ate,token});
-    if(res&&res.__erro){toast(res.__erro+" — dados de demonstração","er");DADOS_RAW=gerarDemo();}
-    else if(res&&res.dados){DADOS_RAW=res.dados;if(res.faixa)FAIXA=res.faixa;}
-    else DADOS_RAW=Array.isArray(res)?res:gerarDemo();
-  }catch(e){console.log("Demo:",e.message);DADOS_RAW=gerarDemo();}
+    // NUNCA usa dados fictícios: em falha, mostra vazio + aviso de conexão.
+    if(res&&res.__erro){ S_ERRO=true; DADOS_RAW=[]; toast(res.__erro,"er"); }
+    else if(res&&Array.isArray(res.dados)){ DADOS_RAW=res.dados; if(res.faixa)FAIXA=res.faixa; S_ERRO=false; }
+    else if(Array.isArray(res)){ DADOS_RAW=res; S_ERRO=false; }
+    else { S_ERRO=true; DADOS_RAW=[]; toast("Resposta inesperada do servidor","er"); }
+  }catch(e){ S_ERRO=true; DADOS_RAW=[]; console.log("Erro:",e.message); toast("Sem resposta do servidor: "+e.message,"er"); }
+  finally{ mostrarLoading(false); }
+  document.getElementById("demo-banner").classList.toggle("on",S_ERRO);
   preencherFiltros();aplicarFiltros();
-}
-
-function gerarDemo(){
-  const pessoas=[["João Silva","SJRP"],["Maria Santos","OSASCO"],["Pedro Costa","CPS"],["Ana Lima","SJRP"],["Carlos Souza","OSASCO"],["Beatriz Rocha","CPS"]];
-  // metrica/meta ilustrativos: só algumas atividades têm meta
-  const ativs=[
-    {codigo:"EMBARCADOR-001",desc:"Aguardando liberação",grupo:"Embarcador",meta:0,unidade:"",metrica:""},
-    {codigo:"TRANSPORTE-001",desc:"Dirigindo",grupo:"Transporte",meta:0,unidade:"",metrica:""},
-    {codigo:"DESCARGA-001",desc:"Descarregamento",grupo:"Descarga e recebimento",meta:12,unidade:"paletes/h",metrica:"paletes"},
-    {codigo:"ARMAZEM-001",desc:"Movimentação",grupo:"Armazém",meta:30,unidade:"volumes/h",metrica:"volume"},
-    {codigo:"ARMAZEM-003",desc:"Separação para expedição",grupo:"Armazém",meta:40,unidade:"volumes/h",metrica:"volume"},
-    {codigo:"CARGA-002",desc:"Carregamento embarque",grupo:"Carga e embarque",meta:18,unidade:"paletes/h",metrica:"paletes"},
-    {codigo:INAT,desc:"Inativo",grupo:"Sistema",meta:0,unidade:"",metrica:""}
-  ];
-  const dados=[],hoje=new Date();
-  for(let d=13;d>=0;d--){
-    const data=new Date(hoje);data.setDate(hoje.getDate()-d);
-    const ds=data.toISOString().split("T")[0];
-    pessoas.forEach(([p,emp],pi)=>{
-      let h=7+pi*.4;
-      for(let i=0;i<6+Math.floor(Math.random()*4);i++){
-        const a=ativs[Math.floor(Math.random()*ativs.length)];
-        const dur=15+Math.floor(Math.random()*90);
-        const hI=`${String(Math.floor(h)).padStart(2,"0")}:${String(Math.floor((h%1)*60)).padStart(2,"0")}`;
-        h+=dur/60;
-        const hF=h<18?`${String(Math.floor(h)).padStart(2,"0")}:${String(Math.floor((h%1)*60)).padStart(2,"0")}`:"18:00";
-        const horas=Math.max(.1,dur/60);
-        // se tem meta, gera quantidade em torno da meta (0.7x a 1.4x) para variar o semáforo
-        let qtd=0,realizado=0;
-        if(a.meta>0){qtd=Math.round(a.meta*horas*(0.7+Math.random()*0.7));realizado=Math.round(qtd/horas);}
-        dados.push({empresa:emp,id_apontamento:Math.random().toString(36),pessoa_nome:p,pessoa_email:p.toLowerCase().replace(" ",".")+"@demo.com",atividade_codigo:a.codigo,atividade_desc:a.desc,grupo:a.grupo,data_inicio:ds,hora_inicio:hI,hora_fim:hF,setor:["SET-001","SET-002","SET-003","SET-004"][pi%4],area:["AR-001","AR-002","AR-003"][i%3],status:["Realizado","Realizado","Realizado","Concluído","Pendente"][Math.floor(Math.random()*5)],meta:a.meta,unidade:a.unidade,metrica:a.metrica,qtd:qtd,realizado:realizado,minutos:dur});
-        if(h>=18)break;h+=.1;
-      }
-    });
-  }
-  return dados;
 }
 
 function preencherFiltros(){
@@ -427,26 +454,28 @@ function preencherFiltros(){
   sA.innerHTML='<option value="">Todas as atividades</option>'+ativs.map(a=>`<option value="${a}">${a}</option>`).join("");
   sG.innerHTML='<option value="">Todos os grupos</option>'+grupos.map(g=>`<option value="${g}">${g}</option>`).join("");
   if(cP)sP.value=cP;if(cA)sA.value=cA;if(cG)sG.value=cG;
-  // empresa
+  // empresas / unidades (multi-seleção)
   const empresas=[...new Set(DADOS_RAW.map(d=>d.empresa).filter(Boolean))].sort();
-  const sE=document.getElementById("f-empresa");const cE=sE.value;
-  sE.innerHTML='<option value="">Todas as empresas</option>'+empresas.map(e=>`<option value="${e}">${e}</option>`).join("");
-  if(cE)sE.value=cE;
+  const antes=EMP_SEL; const primeira=EMP_OPTS.length===0;
+  EMP_OPTS=empresas;
+  if(primeira){ EMP_SEL=new Set(empresas); }               // 1ª carga: todas
+  else { EMP_SEL=new Set(empresas.filter(e=>antes.has(e))); if(EMP_SEL.size===0)EMP_SEL=new Set(empresas); }
+  msRender();
 }
 
 function aplicarFiltros(){
   const de=document.getElementById("f-de").value,ate=document.getElementById("f-ate").value;
   const pessoa=document.getElementById("f-pessoa").value,ativ=document.getElementById("f-ativ").value;
   const grupo=document.getElementById("f-grupo").value,status=document.getElementById("f-status").value;
-  const empresa=document.getElementById("f-empresa").value;
   DADOS_FILT=DADOS_RAW.filter(d=>{
     if(de&&d.data_inicio<de)return false;if(ate&&d.data_inicio>ate)return false;
-    if(empresa&&d.empresa!==empresa)return false;
+    if(!empScopeInclui(d.empresa))return false;
     if(pessoa&&d.pessoa_nome!==pessoa)return false;if(ativ&&d.atividade_codigo!==ativ)return false;
     if(grupo&&(d.grupo||"Outros")!==grupo)return false;if(status&&d.status!==status)return false;
     return true;
   });
-  document.getElementById("tb-periodo").textContent=`${DADOS_FILT.length} apontamento${DADOS_FILT.length!==1?"s":""} · ${de||"—"} até ${ate||"—"}`;
+  const fonte = S_ERRO ? "⚠ sem conexão com o servidor" : ("Fonte: "+(EMP_OPTS.join("+")||"—"));
+  document.getElementById("tb-periodo").textContent=`${DADOS_FILT.length} apontamento${DADOS_FILT.length!==1?"s":""} · ${de||"—"} até ${ate||"—"} · ${fonte}`;
   atuKPIs();renderTabAtual();
 }
 
@@ -454,7 +483,8 @@ function limparFiltros(){
   const hoje=new Date(),semana=new Date(hoje);semana.setDate(hoje.getDate()-6);
   document.getElementById("f-de").value=semana.toISOString().split("T")[0];
   document.getElementById("f-ate").value=hoje.toISOString().split("T")[0];
-  ["f-pessoa","f-ativ","f-grupo","f-status","f-empresa"].forEach(id=>document.getElementById(id).value="");
+  ["f-pessoa","f-ativ","f-grupo","f-status"].forEach(id=>document.getElementById(id).value="");
+  EMP_SEL=new Set(EMP_OPTS); msRender();
   marcarPer("per-7");
   aplicarFiltros();
 }
@@ -622,6 +652,7 @@ function renderResumo(){
 }
 
 function exportCSV(){
+  if(S_ERRO||!DADOS_FILT.length){ toast("Nada para exportar","er"); return; }
   const h=["empresa","data","pessoa","atividade_codigo","atividade","grupo","hora_inicio","hora_fim","duracao_min","meta","unidade","quantidade","realizado","setor","area","status"];
   const rows=DADOS_FILT.map(d=>[d.empresa||"",d.data_inicio,d.pessoa_nome,d.atividade_codigo,d.atividade_desc||"",d.grupo||"",d.hora_inicio||"",d.hora_fim||"",Math.round(_minRow(d)),d.meta||"",d.unidade||"",d.qtd||"",d.realizado||"",d.setor||"",d.area||"",d.status||""].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(","));
   const csv=[h.join(","),...rows].join("\n");
@@ -632,6 +663,7 @@ function exportCSV(){
 }
 
 function exportJSON(){
+  if(S_ERRO||!DADOS_FILT.length){ toast("Nada para exportar","er"); return; }
   const blob=new Blob([JSON.stringify(DADOS_FILT,null,2)],{type:"application/json"});
   const url=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=url;a.download=`SALOME_${new Date().toISOString().split("T")[0]}.json`;a.click();URL.revokeObjectURL(url);
@@ -699,7 +731,7 @@ function renderProd(){
     ["Cobertura de quantidade",A.cobertura+"%",A.cobertura<30?"var(--acc)":"var(--grn)"]
   ].map(x=>`<div class="stat-mini"><div class="stat-mini-v" style="color:${x[2]}">${x[1]}</div><div class="stat-mini-l">${x[0]}</div></div>`).join("");
 
-  const showEmp=!document.getElementById("f-empresa").value;
+  const showEmp=EMP_SEL.size!==1;
   dC("prod-ativ");
   const us=[...A.unidades].sort((a,b)=>b.pct-a.pct).slice(0,14);
   if(us.length){
@@ -775,12 +807,11 @@ function refLinesV(refs){return {id:"refv",afterDatasetsDraw(chart){const ys=cha
 let PA_MIX="geral";
 function paSetMix(s){PA_MIX=s;document.querySelectorAll("#pa-mixToggle button").forEach(b=>b.classList.toggle("on",b.dataset.s===s));paRenderMix();}
 function paPopular(){
-  const empSel=document.getElementById("f-empresa").value;
   const comMeta={};DADOS_RAW.forEach(d=>{if((+d.meta||0)>0)comMeta[d.atividade_codigo]=d.atividade_desc||d.atividade_codigo;});
   const sA=document.getElementById("pa-ativ"),cur=sA.value,cods=Object.keys(comMeta).sort();
   sA.innerHTML=cods.map(c=>`<option value="${c}">${c} · ${comMeta[c]}</option>`).join("");
   if(cur&&comMeta[cur])sA.value=cur;else if(cods.length)sA.value=cods[0];
-  const pes=[...new Set(DADOS_RAW.filter(d=>!empSel||d.empresa===empSel).map(d=>d.pessoa_nome).filter(Boolean))].sort();
+  const pes=[...new Set(DADOS_RAW.filter(d=>empScopeInclui(d.empresa)).map(d=>d.pessoa_nome).filter(Boolean))].sort();
   const sP=document.getElementById("pa-pessoa"),curP=sP.value;
   sP.innerHTML=pes.map(p=>`<option value="${p}">${p}</option>`).join("");
   if(curP&&pes.indexOf(curP)>=0)sP.value=curP;else if(pes.length)sP.value=pes[0];
@@ -789,15 +820,15 @@ function renderPorAtiv(){
   if(!DADOS_RAW.length)return;
   paPopular();
   const cod=document.getElementById("pa-ativ").value;
-  const empSel=document.getElementById("f-empresa").value;
+  const escLbl=empEscopoLabel();
   if(!cod){document.getElementById("pa-metaBadge").textContent="Sem atividades com meta no período.";["pa-chPess","pa-chEmp"].forEach(dC);document.getElementById("pa-partGrid").innerHTML="";document.getElementById("pa-mixList").innerHTML="";return;}
   const info=DADOS_RAW.find(d=>d.atividade_codigo===cod)||{};
   const meta=+info.meta||0,uni=info.unidade||"";
   document.getElementById("pa-metaBadge").innerHTML=`Meta: <b>${meta} ${uni}</b> · métrica ${info.metrica||"—"}`;
-  document.getElementById("pa-pessTit").innerHTML="🏆 Profissionais nesta atividade"+(empSel?` <span style="font-size:11px;color:var(--tx3);font-weight:500">— só ${empSel}</span>`:` <span style="font-size:11px;color:var(--tx3);font-weight:500">— todas as empresas</span>`);
+  document.getElementById("pa-pessTit").innerHTML="🏆 Profissionais nesta atividade"+` <span style="font-size:11px;color:var(--tx3);font-weight:500">— ${escLbl||"todas as empresas"}</span>`;
   const rowsAt=DADOS_RAW.filter(d=>d.atividade_codigo===cod);
   const porPes={};
-  rowsAt.filter(d=>!empSel||d.empresa===empSel).forEach(d=>{const k=d.pessoa_nome||"?";(porPes[k]=porPes[k]||{nome:k,emp:d.empresa,q:0,m:0});porPes[k].q+=(+d.qtd||0);porPes[k].m+=_minRow(d);});
+  rowsAt.filter(d=>empScopeInclui(d.empresa)).forEach(d=>{const k=d.pessoa_nome||"?";(porPes[k]=porPes[k]||{nome:k,emp:d.empresa,q:0,m:0});porPes[k].q+=(+d.qtd||0);porPes[k].m+=_minRow(d);});
   const pess=Object.values(porPes).map(p=>({nome:p.nome,emp:p.emp,real:p.m>0?Math.round(p.q/(p.m/60)):0})).filter(p=>p.real>0).sort((a,b)=>b.real-a.real);
   const porEmp={};
   rowsAt.forEach(d=>{const e=d.empresa||"—";(porEmp[e]=porEmp[e]||{q:0,m:0});porEmp[e].q+=(+d.qtd||0);porEmp[e].m+=_minRow(d);});
