@@ -125,34 +125,19 @@ function buildS2(){
     <div class="mval">${a.pct.toFixed(1)}% <span>· ${fmtH(a.min)}</span></div></div>`).join("");
 }
 
-// ── demonstração (fallback até o .gs ser reimplantado) ──
-function gerarDemo(){
-  const seedBase={SJRP:3,OSASCO:7,CPS:11}[EMPRESA]||5; let s=seedBase;
-  const rnd=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};
-  const M=[["DESCARGA-001",100,"cx/h","Descarregamento"],["ARMAZEM-001",150,"cx/h","Movimentação armazém"],["ARMAZEM-003",80,"cx/h","Separação p/ expedição"],["CARGA-002",90,"cx/h","Carregamento embarque"],["PALET-001",15,"plt/h","Montagem palete"],["PALET-003",25,"plt/h","Pesagem palete"],["CARGA-003",120,"cx/h","Conferência pré-embarque"],["ARMAZEM-002",120,"cx/h","Organização armazém"]];
-  const ats=M.map(m=>{const real=Math.round(m[1]*(0.8+rnd()*0.5));const padrao=Math.round(m[1]*(0.9+rnd()*0.25));return {cod:m[0],desc:m[3],unidade:m[2],meta:m[1],real,padrao,pct:Math.round(real/m[1]*100)};}).sort((a,b)=>b.pct-a.pct);
-  const extra=[["TRANSPORTE-001","Dirigindo"],["INATIVO-001","Inativo"],["ADMIN-002","Briefing"]];
-  const comp=M.map(m=>({cod:m[0],desc:m[3],min:60+Math.round(rnd()*400)})).concat(extra.map(e=>({cod:e[0],desc:e[1],min:120+Math.round(rnd()*500)})));
-  const tot=comp.reduce((x,c)=>x+c.min,0);comp.forEach(c=>c.pct=Math.round(c.min/tot*1000)/10);comp.sort((a,b)=>b.min-a.min);
-  return {ok:true,empresa:EMPRESA,demo:true,atividades:ats,composicao:comp};
-}
-
 async function carregar(){
+  // NUNCA usa dados fictícios: em falha, mostra vazio + aviso de conexão.
   try{
     const r=await api("wsGetPainelProdTV",{empresa:EMPRESA,dias:DIAS});
-    if(r&&r.atividades){DADOS=r;}
-    else DADOS=gerarDemo();
-  }catch(e){DADOS=gerarDemo();}
-  buildS1();buildS2();
-  const dem=DADOS&&DADOS.demo?" · (demonstração — reimplante o Apps Script)":"";
-  document.getElementById("_dem")&&(document.getElementById("_dem").textContent=dem);
-  atualizarFt();
+    DADOS = (r&&Array.isArray(r.atividades)) ? r : {atividades:[],composicao:[],erro:true};
+  }catch(e){ DADOS={atividades:[],composicao:[],erro:true}; }
+  buildS1();buildS2();atualizarFt();
 }
 function atualizarFt(){
-  const dem=DADOS&&DADOS.demo?" · demonstração":"";
+  const st = (DADOS&&DADOS.erro) ? " · ⚠ sem conexão com o servidor" : "";
   document.getElementById("ftInfo").textContent=(cur===0
     ? "Atingimento de meta · unidade "+EMPRESA+" · barra = realizado, marcas = meta e padrão"
-    : "Composição por tempo · unidade "+EMPRESA)+dem;
+    : "Composição por tempo · unidade "+EMPRESA)+st;
 }
 
 function tick(){const d=new Date();document.getElementById("clock").textContent=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");}
